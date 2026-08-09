@@ -177,7 +177,7 @@
         }
         .badge.active { background: var(--mint-light); color: var(--text-dark-mint); }
         .badge.warning { background: #fef3c7; color: #b45309; }
-        .badge.danger { background: rgba(239, 68, 68, 0.15); color: #dc2626; } /* Added danger badge for inactive users */
+        .badge.danger { background: rgba(239, 68, 68, 0.15); color: #dc2626; } 
 
         table {
             width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 1.25rem;
@@ -337,7 +337,7 @@
                 </table>
             </section>
 
-            <!-- 3. View Customers (Now Dynamic) -->
+            <!-- 3. View Customers -->
             <section id="admin-customers" class="view-section">
                 <div style="margin-bottom: 1.5rem;">
                     <h2 style="font-size: 1.5rem; font-weight: 800;">View Customers</h2>
@@ -351,23 +351,24 @@
                 </table>
             </section>
 
-            <!-- Other Admin Sections -->
+            <!-- 4. View Subscriptions (Now Dynamic) -->
             <section id="admin-subscriptions" class="view-section">
                 <div style="margin-bottom: 1.5rem;"><h2 style="font-size: 1.5rem; font-weight: 800;">View Subscriptions</h2></div>
                 <table>
-                    <thead><tr><th>Subscription ID</th><th>Customer</th><th>Plan</th><th>Renewal Date</th></tr></thead>
-                    <tbody>
-                        <tr><td>#SUB-9941</td><td>Sree</td><td>Pro Enterprise</td><td>Aug 28, 2026</td></tr>
+                    <thead><tr><th>Sub ID</th><th>Customer ID</th><th>Plan ID</th><th>Renewal Date</th><th>Status</th></tr></thead>
+                    <tbody id="subscriptionsTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading subscriptions...</td></tr>
                     </tbody>
                 </table>
             </section>
 
+            <!-- 5. View Invoices (Now Dynamic) -->
             <section id="admin-invoices" class="view-section">
                 <div style="margin-bottom: 1.5rem;"><h2 style="font-size: 1.5rem; font-weight: 800;">View Invoices</h2></div>
                 <table>
-                    <thead><tr><th>Invoice Ref</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead>
-                    <tbody>
-                        <tr><td>#INV-2026-07</td><td>Sree</td><td>$49.00</td><td><span class="badge active">Paid</span></td></tr>
+                    <thead><tr><th>Invoice Ref</th><th>Customer ID</th><th>Amount</th><th>Due Date</th><th>Status</th></tr></thead>
+                    <tbody id="invoicesTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading invoices...</td></tr>
                     </tbody>
                 </table>
             </section>
@@ -427,6 +428,8 @@
             // Load Dynamic Data
             fetchPlans();
             fetchCustomers();
+            fetchSubscriptions();
+            fetchInvoices();
         };
 
         function logout() {
@@ -574,7 +577,6 @@
             if (!token) return;
 
             try {
-                // Change '/users/' if your FastAPI endpoint for getting users has a different route name
                 const response = await fetch(`${API_BASE_URL}/users/`, {
                     method: "GET",
                     headers: {
@@ -583,9 +585,7 @@
                     }
                 });
                 
-                if (!response.ok) {
-                    throw new Error("Failed to authenticate or fetch data");
-                }
+                if (!response.ok) throw new Error("Failed to fetch data");
 
                 const customers = await response.json();
                 tbody.innerHTML = ""; 
@@ -595,7 +595,6 @@
                     return;
                 }
                 
-                // Populate the table dynamically from DB
                 customers.forEach(customer => {
                     const name = customer.name || customer.username || "N/A";
                     const email = customer.email || "N/A";
@@ -615,8 +614,101 @@
                     `;
                 });
             } catch (error) {
-                console.error("Fetch Customers Error:", error);
-                tbody.innerHTML = `<tr><td colspan='4' style="color: var(--danger); text-align: center;">Error fetching customer records from database. Check backend connection.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan='4' style="color: var(--danger); text-align: center;">Error fetching customer records from database.</td></tr>`;
+            }
+        }
+
+        // 6. READ ALL SUBSCRIPTIONS (GET)
+        async function fetchSubscriptions() {
+            const tbody = document.getElementById("subscriptionsTableBody");
+            const token = localStorage.getItem("access_token");
+            if (!token) return;
+
+            try {
+                // NOTE: Requires a GET /subscriptions/all endpoint for admins
+                const response = await fetch(`${API_BASE_URL}/subscriptions/all`, {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error("Failed to fetch data");
+
+                const subscriptions = await response.json();
+                tbody.innerHTML = ""; 
+                
+                if (subscriptions.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--text-muted);'>No active subscriptions found.</td></tr>";
+                    return;
+                }
+                
+                subscriptions.forEach(sub => {
+                    const shortId = sub.id ? sub.id.split('-')[0].toUpperCase() : "N/A";
+                    const shortCustId = sub.customer_id ? sub.customer_id.split('-')[0].toUpperCase() : "N/A";
+                    const shortPlanId = sub.plan_id ? sub.plan_id.split('-')[0].toUpperCase() : "N/A";
+                    const renewalDate = sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : "Unknown";
+                    
+                    let badgeClass = "badge";
+                    if (sub.status === "active") badgeClass = "badge active";
+                    else if (sub.status === "trial") badgeClass = "badge warning";
+                    else badgeClass = "badge danger";
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="font-weight: 600;">#SUB-${shortId}</td>
+                            <td>CUST-${shortCustId}</td>
+                            <td>PLAN-${shortPlanId}</td>
+                            <td>${renewalDate}</td>
+                            <td><span class="${badgeClass}">${sub.status.toUpperCase()}</span></td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan='5' style="color: var(--danger); text-align: center;">Error fetching subscriptions. Endpoint /subscriptions/all might be missing.</td></tr>`;
+            }
+        }
+
+        // 7. READ ALL INVOICES (GET)
+        async function fetchInvoices() {
+            const tbody = document.getElementById("invoicesTableBody");
+            const token = localStorage.getItem("access_token");
+            if (!token) return;
+
+            try {
+                // NOTE: Requires a GET /invoices/ endpoint 
+                const response = await fetch(`${API_BASE_URL}/invoices/`, {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error("Failed to fetch data");
+
+                const invoices = await response.json();
+                tbody.innerHTML = ""; 
+                
+                if (invoices.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--text-muted);'>No invoices found in database.</td></tr>";
+                    return;
+                }
+                
+                invoices.forEach(inv => {
+                    const shortId = inv.id ? inv.id.split('-')[0].toUpperCase() : "N/A";
+                    const shortCustId = inv.customer_id ? inv.customer_id.split('-')[0].toUpperCase() : "N/A";
+                    const dueDate = inv.due_date ? new Date(inv.due_date).toLocaleDateString() : "Unknown";
+                    
+                    const badgeClass = inv.status === "paid" ? "badge active" : "badge warning";
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="font-weight: 600;">#INV-${shortId}</td>
+                            <td>CUST-${shortCustId}</td>
+                            <td style="font-weight: 700; color: var(--text-dark-mint);">$${parseFloat(inv.amount_due).toFixed(2)}</td>
+                            <td>${dueDate}</td>
+                            <td><span class="${badgeClass}">${inv.status.toUpperCase()}</span></td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                tbody.innerHTML = `<tr><td colspan='5' style="color: var(--danger); text-align: center;">Error fetching invoices. Endpoint /invoices/ might be missing.</td></tr>`;
             }
         }
     </script>

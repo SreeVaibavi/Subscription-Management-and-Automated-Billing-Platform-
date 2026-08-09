@@ -171,12 +171,15 @@
         .badge { display: inline-flex; align-items: center; gap: 6px; padding: 0.35rem 0.85rem; border-radius: 30px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
         .badge.active { background: var(--mint-light); color: var(--text-dark-mint); }
         .badge.danger { background: #fee2e2; color: #dc2626; }
+        .badge.warning { background: #fef3c7; color: #b45309; }
+        .badge.neutral { background: #e2e8f0; color: #475569; }
 
         table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 1.25rem; background: var(--card-bg); border-radius: 20px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: var(--shadow-card); }
         th, td { padding: 1.1rem 1.5rem; text-align: left; }
         th { background: #f8fafc; font-weight: 700; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); }
         td { font-size: 0.92rem; border-bottom: 1px solid #f1f5f9; color: var(--text-main); font-weight: 500; }
         tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: #f0fdf4; }
 
         .btn {
             background: linear-gradient(135deg, #36b37e 0%, #2ecc71 100%); 
@@ -202,6 +205,15 @@
             color: var(--text-dark-mint);
             border-color: var(--primary-mint);
             transform: translateY(-2px);
+        }
+        .btn-danger { 
+            background: #ef4444; 
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+            border-radius: 30px;
+        }
+        .btn-danger:hover { 
+            background: #dc2626;
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45); 
         }
 
         .form-group { margin-bottom: 1.4rem; }
@@ -260,7 +272,6 @@
             </div>
             
             <div>
-                <!-- Removed Role Switcher, only Logout remains -->
                 <ul class="nav-links" style="margin-top: 1rem;">
                     <li><a href="#" onclick="logout()">🚪 <span>Logout</span></a></li>
                 </ul>
@@ -275,7 +286,7 @@
                     <p>Manage your account settings, subscription tiers, and invoices.</p>
                 </div>
                 <div>
-                    <span class="badge active" id="headerStatusBadge">Active Account</span>
+                    <span class="badge neutral" id="headerStatusBadge">Checking Status...</span>
                 </div>
             </header>
 
@@ -285,7 +296,7 @@
                     <div class="card">
                         <h3>Current Plan</h3>
                         <div class="value" id="dashPlanName">Free Tier</div>
-                        <p style="color: var(--text-muted); font-size: 0.85rem;">Upgrade anytime</p>
+                        <p style="color: var(--text-muted); font-size: 0.85rem;" id="dashPlanSubtext">Upgrade anytime</p>
                     </div>
                 </div>
 
@@ -293,6 +304,7 @@
                     <h3 style="margin-bottom: 0.75rem; font-size: 1.1rem; color: var(--text-main); text-transform: none;">Subscription Quick Actions</h3>
                     <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">Review your options, upgrade tiers, or check past billing data easily.</p>
                     <button class="btn" onclick="switchView('plans-view')">View Available Plans</button>
+                    <button class="btn btn-outline" style="margin-left: 10px;" onclick="switchView('subscription-view')">Manage Subscription</button>
                 </div>
             </section>
 
@@ -309,21 +321,38 @@
                 </div>
             </section>
 
-            <!-- Static Sections -->
+            <!-- 3. Subscription Details View -->
             <section id="subscription-view" class="view-section">
                 <div class="card">
                     <h3 style="margin-bottom: 1.25rem; font-size: 1.1rem; color: var(--text-main); text-transform: none;">My Subscription Details</h3>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">You are not currently subscribed to a premium plan.</p>
+                    <div id="subInfoContent">
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Fetching subscription data...</p>
+                    </div>
                 </div>
             </section>
 
+            <!-- 4. Billing View (Dynamic Invoices) -->
             <section id="billing-view" class="view-section">
                 <div style="margin-bottom: 1.5rem;">
                     <h2 style="font-size: 1.5rem; font-weight: 800;">Invoice History</h2>
-                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 4px;">No past invoices found.</p>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 4px;">Review and manage your past billing statements.</p>
                 </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Invoice Ref</th>
+                            <th>Amount</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoicesTableBody">
+                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Loading invoices...</td></tr>
+                    </tbody>
+                </table>
             </section>
 
+            <!-- 5. Profile View -->
             <section id="profile-view" class="view-section">
                 <div class="card" style="max-width: 600px;">
                     <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-main); text-transform: none;">View / Edit Profile</h3>
@@ -334,7 +363,7 @@
                         </div>
                         <div class="form-group">
                             <label>Email Address</label>
-                            <input type="email" class="form-control" id="profileEmail" value="user@example.com">
+                            <input type="email" class="form-control" id="profileEmail" value="user@example.com" disabled>
                         </div>
                         <button type="submit" class="btn" style="margin-top: 0.5rem;">Save Profile</button>
                     </form>
@@ -343,9 +372,10 @@
         </main>
     </div>
 
-    <!-- JAVASCRIPT LOGIC (Untouched) -->
+    <!-- JAVASCRIPT LOGIC -->
     <script>
         const API_BASE_URL = "http://127.0.0.1:8000";
+        let myCurrentSubscriptionId = null;
 
         // Navigation UI Logic
         const navLinks = document.querySelectorAll('#navigationList li a');
@@ -370,7 +400,7 @@
             });
         }
 
-        // Authentication & Backend Logic
+        // Authentication & Data Loading
         window.onload = () => {
             const token = localStorage.getItem("access_token");
             if (!token) {
@@ -378,7 +408,9 @@
                 window.location.href = "auth.html";
                 return;
             }
-            fetchCustomerPlans(); // Fetch plans when the page loads
+            fetchCustomerPlans(); 
+            fetchMySubscription();
+            fetchMyInvoices();
         };
 
         function logout() {
@@ -386,11 +418,22 @@
             window.location.href = "auth.html";
         }
 
-        // 1. READ PLANS (GET) - Populating the User Cards
+        // Helper for API calls
+        async function authFetch(endpoint, options = {}) {
+            const token = localStorage.getItem("access_token");
+            const headers = { 
+                "Authorization": `Bearer ${token}`, 
+                "Content-Type": "application/json", 
+                ...options.headers 
+            };
+            const response = await fetch(API_BASE_URL + endpoint, { ...options, headers });
+            if (response.status === 401) logout();
+            return response;
+        }
+
+        // 1. READ PLANS (GET)
         async function fetchCustomerPlans() {
             const grid = document.getElementById("customerPlansGrid");
-            grid.innerHTML = "<p style='color: var(--text-muted);'>Fetching available plans...</p>";
-            
             try {
                 const response = await fetch(`${API_BASE_URL}/plans/`);
                 const plans = await response.json();
@@ -401,10 +444,8 @@
                     return;
                 }
                 
-                // Dynamically build the glassmorphism cards based on backend data
                 plans.forEach(plan => {
                     const features = plan.feature_entitlements ? plan.feature_entitlements.join("<br>✓ ") : "Standard Features";
-                    
                     grid.innerHTML += `
                         <div class="pricing-card">
                             <div>
@@ -414,7 +455,7 @@
                                     ✓ ${features}
                                 </div>
                             </div>
-                            <button class="btn btn-outline" style="margin-top: 1.5rem;" onclick="subscribePlan('${plan.name}')">Select Plan</button>
+                            <button class="btn btn-outline" style="margin-top: 1.5rem;" onclick="subscribePlan('${plan.id}', '${plan.name}')">Select Plan</button>
                         </div>
                     `;
                 });
@@ -423,18 +464,153 @@
             }
         }
 
-        // Checkout Logic
-        function subscribePlan(planName) {
-            alert(`Thanks for choosing the ${planName} plan! Backend checkout logic will go here.`);
-            document.getElementById('dashPlanName').innerText = planName;
-            switchView('home-view');
+        // 2. READ SUBSCRIPTION (GET)
+        async function fetchMySubscription() {
+            try {
+                const response = await authFetch("/subscriptions/me");
+                const subs = await response.json();
+                
+                const dashPlanName = document.getElementById("dashPlanName");
+                const dashPlanSubtext = document.getElementById("dashPlanSubtext");
+                const headerBadge = document.getElementById("headerStatusBadge");
+                const subInfoContent = document.getElementById("subInfoContent");
+
+                if (subs.length === 0) {
+                    dashPlanName.innerText = "Free Tier";
+                    dashPlanSubtext.innerText = "Upgrade anytime";
+                    headerBadge.innerText = "FREE TIER";
+                    headerBadge.className = "badge neutral";
+                    subInfoContent.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem;">You are not currently subscribed to a premium plan. Visit the Plans tab to upgrade.</p>`;
+                    return;
+                }
+
+                // Get the most recent subscription
+                const sub = subs[subs.length - 1]; 
+                myCurrentSubscriptionId = sub.id;
+
+                // Update Dashboard Overview
+                dashPlanName.innerText = `PLAN-${sub.plan_id.split('-')[0].toUpperCase()}`;
+                dashPlanSubtext.innerText = `Renews on ${new Date(sub.current_period_end).toLocaleDateString()}`;
+
+                // Update Header Badge
+                headerBadge.innerText = sub.status.toUpperCase();
+                if (sub.status === "active" || sub.status === "trial") {
+                    headerBadge.className = "badge active";
+                } else if (sub.status === "cancelled") {
+                    headerBadge.className = "badge danger";
+                } else {
+                    headerBadge.className = "badge warning";
+                }
+
+                // Update Detailed Subscription View
+                let actionButtons = "";
+                if (sub.status === "active" || sub.status === "trial") {
+                    actionButtons = `
+                        <button class="btn btn-outline" onclick="pauseSub()">Pause Subscription</button>
+                        <button class="btn btn-danger" onclick="cancelSub()">Cancel Subscription</button>
+                    `;
+                } else if (sub.status === "paused") {
+                    actionButtons = `
+                        <button class="btn" onclick="resumeSub()">Resume Subscription</button>
+                        <button class="btn btn-danger" onclick="cancelSub()">Cancel Subscription</button>
+                    `;
+                }
+
+                subInfoContent.innerHTML = `
+                    <p style="margin-bottom: 8px;"><strong>Status:</strong> <span style="color: var(--text-dark-mint); font-weight: 700;">${sub.status.toUpperCase()}</span></p>
+                    <p style="margin-bottom: 8px;"><strong>Renewal Date:</strong> ${new Date(sub.current_period_end).toLocaleDateString()}</p>
+                    <p style="margin-bottom: 24px;"><strong>Plan ID:</strong> ${sub.plan_id}</p>
+                    <div style="display: flex; gap: 12px;">
+                        ${actionButtons}
+                    </div>
+                `;
+
+            } catch (e) {
+                console.error("Error fetching subscription:", e);
+            }
         }
 
+        // 3. READ INVOICES (GET)
+        async function fetchMyInvoices() {
+            try {
+                const response = await authFetch("/invoices/me");
+                const invoices = await response.json();
+                const tbody = document.getElementById("invoicesTableBody");
+                
+                tbody.innerHTML = "";
+                if (invoices.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='4' style='text-align: center; color: var(--text-muted);'>No past invoices found.</td></tr>";
+                    return;
+                }
+
+                invoices.forEach(inv => {
+                    const shortId = inv.id.split('-')[0].toUpperCase();
+                    const dueDate = new Date(inv.due_date).toLocaleDateString();
+                    const badgeClass = inv.status === "paid" ? "badge active" : "badge warning";
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="font-weight: 600;">#INV-${shortId}</td>
+                            <td style="font-weight: 700; color: var(--text-dark-mint);">$${parseFloat(inv.amount_due).toFixed(2)}</td>
+                            <td>${dueDate}</td>
+                            <td><span class="${badgeClass}">${inv.status.toUpperCase()}</span></td>
+                        </tr>
+                    `;
+                });
+            } catch (e) {
+                console.error("Error fetching invoices:", e);
+            }
+        }
+
+        // 4. SUBSCRIPTION ACTIONS (POST/PUT)
+        async function subscribePlan(planId, planName) {
+            if(!confirm(`Are you sure you want to subscribe to the ${planName} plan?`)) return;
+            
+            try {
+                const res = await authFetch("/subscriptions/", {
+                    method: "POST",
+                    body: JSON.stringify({ plan_id: planId })
+                });
+                
+                if (res.ok) {
+                    alert(`Successfully subscribed to ${planName}!`);
+                    fetchMySubscription();
+                    switchView('subscription-view');
+                } else {
+                    const err = await res.json();
+                    alert("Error processing subscription: " + JSON.stringify(err));
+                }
+            } catch (e) { 
+                console.error(e); 
+            }
+        }
+
+        async function pauseSub() {
+            if(!confirm("Are you sure you want to pause your subscription?")) return;
+            await authFetch(`/subscriptions/${myCurrentSubscriptionId}/pause`, { method: "PUT" });
+            fetchMySubscription();
+        }
+
+        async function resumeSub() {
+            await authFetch(`/subscriptions/${myCurrentSubscriptionId}/resume`, { method: "PUT" });
+            fetchMySubscription();
+        }
+
+        async function cancelSub() {
+            const immediate = confirm("Click OK to cancel immediately. Click Cancel to let it expire at the end of your billing cycle.");
+            await authFetch(`/subscriptions/${myCurrentSubscriptionId}/cancel`, { 
+                method: "PUT", 
+                body: JSON.stringify({ immediate: immediate }) 
+            });
+            fetchMySubscription();
+        }
+
+        // Profile Dummy Logic
         function saveProfile(e) {
             e.preventDefault();
             const name = document.getElementById('profileName').value;
             document.getElementById('welcomeHeader').innerText = `Welcome, ${name}!`;
-            alert("Profile updated!");
+            alert("Profile updated successfully!");
         }
     </script>
 </body>

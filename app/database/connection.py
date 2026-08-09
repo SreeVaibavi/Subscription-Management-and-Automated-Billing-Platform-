@@ -17,16 +17,17 @@ print("="*50 + "\n")
 # 3. Force a hardcoded fallback if .env fails
 if not DATABASE_URL:
     print("WARNING: .env file failed to load! Using hardcoded URL instead...\n")
+    # Note: Ensure your local PostgreSQL database is still named 'billflow' 
     DATABASE_URL = "postgresql://postgres:123456@localhost:5432/billflow"
 
 # 4. Create the engine
 engine = create_engine(DATABASE_URL)
 
+# 5. Session Setup (Required for Celery Background Tasks)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Add this to the bottom of app/database/connection.py
-
+# 6. Database Dependency (Required for FastAPI Routers)
 def get_db():
     db = SessionLocal()
     try:
