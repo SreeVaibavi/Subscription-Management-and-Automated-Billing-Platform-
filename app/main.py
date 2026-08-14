@@ -12,7 +12,11 @@ from app.routers import auth
 from app.api import plans
 from app.api import users  
 from app.api import subscriptions
-from app.api import invoices  # <-- NEW: Imported invoices router
+from app.api import invoices
+
+# NEW: Import the Mock Gateway and Webhooks
+from app.api import mock_gateway
+from app.api import webhooks
 
 # Create all tables in the database
 Base.metadata.create_all(bind=engine)
@@ -38,7 +42,11 @@ app.include_router(auth.router)
 app.include_router(plans.router)
 app.include_router(users.router)  
 app.include_router(subscriptions.router)
-app.include_router(invoices.router)  # <-- NEW: Plugged invoices router into the app
+app.include_router(invoices.router)  
+
+# NEW: Register the Mock Bank and Webhook routers
+app.include_router(mock_gateway.router)
+app.include_router(webhooks.router)
 
 # Root endpoint for health check
 @app.get("/")

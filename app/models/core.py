@@ -3,9 +3,21 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
 import uuid
+import random
+import string
+from datetime import datetime, timezone
 
 # Import Base from your database connection
 from app.database.connection import Base
+
+# ==========================================
+# HELPER FUNCTIONS
+# ==========================================
+def generate_invoice_number():
+    """Generates a professional invoice number like INV-202608-X7B9"""
+    date_str = datetime.now(timezone.utc).strftime("%Y%m")
+    rand_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    return f"INV-{date_str}-{rand_str}"
 
 # ==========================================
 # 1. ENUMS (State Machine Definitions)
@@ -35,11 +47,17 @@ class PaymentStatus(str, enum.Enum):
 # ==========================================
 class Customer(Base):
     __tablename__ = "customers"
-    
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+
+    id = Column(String, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     is_admin = Column(Boolean, default=False)
+    
+    # --- NEW COLUMNS FOR PROFILE SECTION ---
+    full_name = Column(String, nullable=True)
+    phone_number = Column(String, nullable=True)
+    # ---------------------------------------
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class Plan(Base):
@@ -95,14 +113,19 @@ class BillingCycle(Base):
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+# --- UPGRADED INVOICE MODEL ---
 class Invoice(Base):
     __tablename__ = "invoices"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    invoice_number = Column(String, unique=True, index=True, default=generate_invoice_number) # NEW
+    
     customer_id = Column(String, ForeignKey("customers.id"), nullable=False)
     subscription_id = Column(String, ForeignKey("subscriptions.id"), nullable=True)
     
-    amount_due = Column(Float, nullable=False)
+    subtotal = Column(Float, default=0.0, nullable=False)   # NEW
+    tax_amount = Column(Float, default=0.0, nullable=False) # NEW
+    amount_due = Column(Float, nullable=False)              # Final Total
     amount_paid = Column(Float, default=0.0)
     currency = Column(String, default="USD")
     
@@ -110,6 +133,24 @@ class Invoice(Base):
     due_date = Column(DateTime(timezone=True), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # NEW: Link to line items
+    items = relationship("InvoiceItem", back_populates="invoice", cascade="all, delete-orphan")
+
+# --- BRAND NEW INVOICE ITEM MODEL ---
+class InvoiceItem(Base):
+    __tablename__ = "invoice_items"
+    
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    invoice_id = Column(String, ForeignKey("invoices.id"), nullable=False)
+    
+    description = Column(String, nullable=False) # e.g., "Pro Plan - Monthly" or "Proration Credit"
+    amount = Column(Float, nullable=False)       # Can be negative for credits!
+    currency = Column(String, default="USD")
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    invoice = relationship("Invoice", back_populates="items")
 
 class Payment(Base):
     __tablename__ = "payments"

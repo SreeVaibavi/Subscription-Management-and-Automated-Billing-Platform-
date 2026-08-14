@@ -188,11 +188,13 @@
             transition: all 0.25s ease;
             box-shadow: var(--shadow-btn); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
         }
-        .btn:hover { 
+        .btn:hover:not(:disabled) { 
             background: linear-gradient(135deg, #2e9b6d 0%, #27ae60 100%);
             transform: translateY(-2px); 
             box-shadow: 0 6px 20px rgba(54, 179, 126, 0.45); 
         }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
+        
         .btn-outline { 
             background: #ffffff; 
             border: 1px solid var(--border-color); 
@@ -250,6 +252,28 @@
         .pricing-card h4 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 0.5rem; color: var(--text-main); }
         .pricing-card .price { font-size: 2.5rem; font-weight: 800; margin: 1.25rem 0; color: var(--primary-mint); letter-spacing: -1px; }
         .features-list { font-size: 0.9rem; color: var(--text-muted); text-align: left; margin: 20px 0; line-height: 1.8; }
+
+        /* --- NEW: Payment Modal Styles --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: #ffffff; border: 1px solid var(--border-color);
+            width: 100%; max-width: 420px; padding: 40px; border-radius: 28px; position: relative;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .modal-close {
+            position: absolute; top: 20px; right: 24px; background: #f1f5f9; border: none;
+            color: var(--text-muted); font-size: 1.4rem; width: 36px; height: 36px; border-radius: 50%;
+            cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close:hover { background: #e2e8f0; color: var(--text-main); }
     </style>
 </head>
 <body>
@@ -315,7 +339,6 @@
                     <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 4px;">Choose a plan that suits your personal or business goals.</p>
                 </div>
                 
-                <!-- This grid will be populated by Javascript from FastAPI -->
                 <div class="pricing-grid" id="customerPlansGrid">
                     <p style="color: var(--text-muted);">Loading plans from server...</p>
                 </div>
@@ -344,10 +367,11 @@
                             <th>Amount</th>
                             <th>Due Date</th>
                             <th>Status</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="invoicesTableBody">
-                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Loading invoices...</td></tr>
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading invoices...</td></tr>
                     </tbody>
                 </table>
             </section>
@@ -359,11 +383,19 @@
                     <form onsubmit="saveProfile(event)">
                         <div class="form-group">
                             <label>Full Name</label>
-                            <input type="text" class="form-control" id="profileName" value="Awesome User">
+                            <input type="text" class="form-control" id="profileName" placeholder="e.g. Harshdeep Sharma">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="text" class="form-control" id="profilePhone" placeholder="+1 (555) 000-0000">
                         </div>
                         <div class="form-group">
                             <label>Email Address</label>
-                            <input type="email" class="form-control" id="profileEmail" value="user@example.com" disabled>
+                            <input type="email" class="form-control" id="profileEmail" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>New Password (Optional)</label>
+                            <input type="password" class="form-control" id="profilePassword" placeholder="Leave blank to keep current password">
                         </div>
                         <button type="submit" class="btn" style="margin-top: 0.5rem;">Save Profile</button>
                     </form>
@@ -372,10 +404,50 @@
         </main>
     </div>
 
+    <!-- --- NEW: THE CHECKOUT MODAL --- -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closePaymentModal()">×</button>
+            <h2 style="margin-bottom: 6px; font-size: 1.4rem; font-weight: 800;">Complete Payment</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.9rem;" id="paymentModalDesc">Invoice #INV-XYZ • $0.00</p>
+
+            <form id="simulatedPaymentForm">
+                <div class="form-group">
+                    <label>Name on Card</label>
+                    <input type="text" class="form-control" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label>Card Number</label>
+                    <input type="text" class="form-control" placeholder="•••• •••• •••• 4242" required maxlength="19">
+                </div>
+                <div style="display: flex; gap: 15px; margin-bottom: 1.4rem;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>Expiry (MM/YY)</label>
+                        <input type="text" class="form-control" placeholder="12/25" required maxlength="5">
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>CVC</label>
+                        <input type="text" class="form-control" placeholder="123" required maxlength="4">
+                    </div>
+                </div>
+                <button type="submit" class="btn" style="width: 100%; justify-content: center; padding: 16px; font-size: 1rem;" id="confirmPaymentBtn">Pay Now</button>
+                <p style="text-align: center; font-size: 0.75rem; color: var(--text-dim); margin-top: 16px;">
+                    🔒 Secured by Mock Gateway 256-bit Encryption
+                </p>
+            </form>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT LOGIC -->
     <script>
         const API_BASE_URL = "http://127.0.0.1:8000";
         let myCurrentSubscriptionId = null;
+        let myCurrentSubscriptionStatus = null;
+        
+        // Modal State Variables
+        let pendingInvoiceId = null;
+        let pendingCustomerId = null;
+        let pendingAmount = null;
 
         // Navigation UI Logic
         const navLinks = document.querySelectorAll('#navigationList li a');
@@ -408,6 +480,8 @@
                 window.location.href = "auth.html";
                 return;
             }
+            
+            fetchMyProfile();
             fetchCustomerPlans(); 
             fetchMySubscription();
             fetchMyInvoices();
@@ -431,19 +505,59 @@
             return response;
         }
 
+        // FETCH PROFILE DATA
+        async function fetchMyProfile() {
+            try {
+                const response = await authFetch("/users/me/profile");
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('profileEmail').value = data.email || "";
+                    document.getElementById('profileName').value = data.full_name || "";
+                    document.getElementById('profilePhone').value = data.phone_number || "";
+                    const displayName = data.full_name || "User";
+                    document.getElementById('welcomeHeader').innerText = `Welcome, ${displayName}!`;
+                }
+            } catch (e) { console.error("Error fetching profile:", e); }
+        }
+
+        // SAVE PROFILE DATA
+        async function saveProfile(e) {
+            e.preventDefault(); 
+            const fullName = document.getElementById('profileName').value;
+            const phone = document.getElementById('profilePhone').value;
+            const password = document.getElementById('profilePassword').value;
+            
+            const payload = {};
+            if (fullName) payload.full_name = fullName;
+            if (phone) payload.phone_number = phone;
+            if (password) payload.password = password;
+
+            try {
+                const response = await authFetch("/users/me/profile", {
+                    method: "PUT", body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    alert("Profile updated successfully!");
+                    document.getElementById('profilePassword').value = ""; 
+                    fetchMyProfile(); 
+                } else {
+                    const err = await response.json();
+                    alert("Error updating profile: " + JSON.stringify(err));
+                }
+            } catch (e) { console.error("Error saving profile:", e); }
+        }
+
         // 1. READ PLANS (GET)
         async function fetchCustomerPlans() {
             const grid = document.getElementById("customerPlansGrid");
             try {
                 const response = await fetch(`${API_BASE_URL}/plans/`);
                 const plans = await response.json();
-                
                 grid.innerHTML = "";
                 if (plans.length === 0) {
                     grid.innerHTML = "<p style='color: var(--text-muted);'>No active plans available at the moment.</p>";
                     return;
                 }
-                
                 plans.forEach(plan => {
                     const features = plan.feature_entitlements ? plan.feature_entitlements.join("<br>✓ ") : "Standard Features";
                     grid.innerHTML += `
@@ -451,17 +565,13 @@
                             <div>
                                 <h4>${plan.name}</h4>
                                 <div class="price">$${plan.price}<span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">/mo</span></div>
-                                <div class="features-list">
-                                    ✓ ${features}
-                                </div>
+                                <div class="features-list">✓ ${features}</div>
                             </div>
                             <button class="btn btn-outline" style="margin-top: 1.5rem;" onclick="subscribePlan('${plan.id}', '${plan.name}')">Select Plan</button>
                         </div>
                     `;
                 });
-            } catch (error) {
-                grid.innerHTML = `<p style="color: var(--danger);">Error fetching plans. Is FastAPI running?</p>`;
-            }
+            } catch (error) { grid.innerHTML = `<p style="color: var(--danger);">Error fetching plans.</p>`; }
         }
 
         // 2. READ SUBSCRIPTION (GET)
@@ -469,7 +579,6 @@
             try {
                 const response = await authFetch("/subscriptions/me");
                 const subs = await response.json();
-                
                 const dashPlanName = document.getElementById("dashPlanName");
                 const dashPlanSubtext = document.getElementById("dashPlanSubtext");
                 const headerBadge = document.getElementById("headerStatusBadge");
@@ -484,25 +593,18 @@
                     return;
                 }
 
-                // Get the most recent subscription
-                const sub = subs[subs.length - 1]; 
+                const sub = subs[0]; 
                 myCurrentSubscriptionId = sub.id;
+                myCurrentSubscriptionStatus = sub.status;
 
-                // Update Dashboard Overview
                 dashPlanName.innerText = `PLAN-${sub.plan_id.split('-')[0].toUpperCase()}`;
                 dashPlanSubtext.innerText = `Renews on ${new Date(sub.current_period_end).toLocaleDateString()}`;
 
-                // Update Header Badge
                 headerBadge.innerText = sub.status.toUpperCase();
-                if (sub.status === "active" || sub.status === "trial") {
-                    headerBadge.className = "badge active";
-                } else if (sub.status === "cancelled") {
-                    headerBadge.className = "badge danger";
-                } else {
-                    headerBadge.className = "badge warning";
-                }
+                if (sub.status === "active" || sub.status === "trial") headerBadge.className = "badge active";
+                else if (sub.status === "cancelled") headerBadge.className = "badge danger";
+                else headerBadge.className = "badge warning";
 
-                // Update Detailed Subscription View
                 let actionButtons = "";
                 if (sub.status === "active" || sub.status === "trial") {
                     actionButtons = `
@@ -520,14 +622,9 @@
                     <p style="margin-bottom: 8px;"><strong>Status:</strong> <span style="color: var(--text-dark-mint); font-weight: 700;">${sub.status.toUpperCase()}</span></p>
                     <p style="margin-bottom: 8px;"><strong>Renewal Date:</strong> ${new Date(sub.current_period_end).toLocaleDateString()}</p>
                     <p style="margin-bottom: 24px;"><strong>Plan ID:</strong> ${sub.plan_id}</p>
-                    <div style="display: flex; gap: 12px;">
-                        ${actionButtons}
-                    </div>
+                    <div style="display: flex; gap: 12px;">${actionButtons}</div>
                 `;
-
-            } catch (e) {
-                console.error("Error fetching subscription:", e);
-            }
+            } catch (e) { console.error("Error fetching subscription:", e); }
         }
 
         // 3. READ INVOICES (GET)
@@ -539,79 +636,165 @@
                 
                 tbody.innerHTML = "";
                 if (invoices.length === 0) {
-                    tbody.innerHTML = "<tr><td colspan='4' style='text-align: center; color: var(--text-muted);'>No past invoices found.</td></tr>";
+                    tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--text-muted);'>No past invoices found.</td></tr>";
                     return;
                 }
 
                 invoices.forEach(inv => {
                     const shortId = inv.id.split('-')[0].toUpperCase();
-                    const dueDate = new Date(inv.due_date).toLocaleDateString();
-                    const badgeClass = inv.status === "paid" ? "badge active" : "badge warning";
+                    const invoiceNum = inv.invoice_number || '#INV-'+shortId;
+                    const dueDate = inv.due_date ? new Date(inv.due_date).toLocaleDateString() : "Due Immediately";
+                    
+                    let badgeClass = "badge neutral";
+                    if (inv.status === "paid") badgeClass = "badge active";
+                    else if (inv.status === "open") badgeClass = "badge warning";
+                    else if (inv.status === "uncollectible") badgeClass = "badge danger";
+
+                    let actionButtons = `
+                        <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; margin-right: 4px;" 
+                            onclick="downloadPDF('${inv.id}', '${invoiceNum}')">
+                            📥 PDF
+                        </button>
+                    `;
+
+                    // --- UPDATED: THIS NOW OPENS THE MODAL INSTEAD OF FIRING THE REQUEST ---
+                    if (inv.status === "open") {
+                        actionButtons += `
+                            <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" 
+                                onclick="openPaymentModal('${inv.id}', '${inv.customer_id}', ${inv.amount_due}, '${invoiceNum}')">
+                                💳 Pay Now
+                            </button>
+                        `;
+                    }
 
                     tbody.innerHTML += `
                         <tr>
-                            <td style="font-weight: 600;">#INV-${shortId}</td>
+                            <td style="font-weight: 600;">${invoiceNum}</td>
                             <td style="font-weight: 700; color: var(--text-dark-mint);">$${parseFloat(inv.amount_due).toFixed(2)}</td>
                             <td>${dueDate}</td>
                             <td><span class="${badgeClass}">${inv.status.toUpperCase()}</span></td>
+                            <td>${actionButtons}</td>
                         </tr>
                     `;
                 });
-            } catch (e) {
-                console.error("Error fetching invoices:", e);
-            }
+            } catch (e) { console.error("Error fetching invoices:", e); }
         }
 
         // 4. SUBSCRIPTION ACTIONS (POST/PUT)
         async function subscribePlan(planId, planName) {
-            if(!confirm(`Are you sure you want to subscribe to the ${planName} plan?`)) return;
-            
+            if(!confirm(`Are you sure you want to select the ${planName} plan?`)) return;
             try {
-                const res = await authFetch("/subscriptions/", {
-                    method: "POST",
-                    body: JSON.stringify({ plan_id: planId })
-                });
-                
-                if (res.ok) {
-                    alert(`Successfully subscribed to ${planName}!`);
-                    fetchMySubscription();
-                    switchView('subscription-view');
+                let res;
+                if (myCurrentSubscriptionId && myCurrentSubscriptionStatus !== 'cancelled') {
+                    res = await authFetch(`/subscriptions/${myCurrentSubscriptionId}/change_plan?new_plan_id=${planId}`, { method: "PUT" });
                 } else {
-                    const err = await res.json();
-                    alert("Error processing subscription: " + JSON.stringify(err));
+                    res = await authFetch("/subscriptions/", { method: "POST", body: JSON.stringify({ plan_id: planId }) });
                 }
-            } catch (e) { 
-                console.error(e); 
-            }
+                if (res.ok) {
+                    alert(`Successfully processed your request for ${planName}!`);
+                    fetchMySubscription(); fetchMyInvoices(); switchView('billing-view'); 
+                } else {
+                    const err = await res.json(); alert("Error processing subscription: " + JSON.stringify(err));
+                }
+            } catch (e) { console.error(e); }
         }
 
         async function pauseSub() {
             if(!confirm("Are you sure you want to pause your subscription?")) return;
-            await authFetch(`/subscriptions/${myCurrentSubscriptionId}/pause`, { method: "PUT" });
-            fetchMySubscription();
+            await authFetch(`/subscriptions/${myCurrentSubscriptionId}/pause`, { method: "PUT" }); fetchMySubscription();
         }
 
         async function resumeSub() {
-            await authFetch(`/subscriptions/${myCurrentSubscriptionId}/resume`, { method: "PUT" });
-            fetchMySubscription();
+            await authFetch(`/subscriptions/${myCurrentSubscriptionId}/resume`, { method: "PUT" }); fetchMySubscription();
         }
 
         async function cancelSub() {
             const immediate = confirm("Click OK to cancel immediately. Click Cancel to let it expire at the end of your billing cycle.");
-            await authFetch(`/subscriptions/${myCurrentSubscriptionId}/cancel`, { 
-                method: "PUT", 
-                body: JSON.stringify({ immediate: immediate }) 
-            });
+            await authFetch(`/subscriptions/${myCurrentSubscriptionId}/cancel`, { method: "PUT", body: JSON.stringify({ immediate: immediate }) });
             fetchMySubscription();
         }
 
-        // Profile Dummy Logic
-        function saveProfile(e) {
-            e.preventDefault();
-            const name = document.getElementById('profileName').value;
-            document.getElementById('welcomeHeader').innerText = `Welcome, ${name}!`;
-            alert("Profile updated successfully!");
+        // 5. SECURE PDF DOWNLOAD
+        async function downloadPDF(invoiceId, invoiceNumber) {
+            try {
+                const response = await authFetch(`/invoices/${invoiceId}/pdf`);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = `${invoiceNumber || 'Invoice'}.pdf`; 
+                    document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(url); document.body.removeChild(a);
+                } else { alert("Error downloading PDF. Are you authenticated?"); }
+            } catch (e) { console.error("PDF Download Error:", e); }
         }
+
+        // --- NEW: CHECKOUT MODAL LOGIC ---
+        function openPaymentModal(invoiceId, customerId, amountDue, invoiceNumber) {
+            // Save details to global variables so the form submission can access them
+            pendingInvoiceId = invoiceId;
+            pendingCustomerId = customerId;
+            pendingAmount = amountDue;
+
+            // Update modal text dynamically
+            const formattedAmount = parseFloat(amountDue).toFixed(2);
+            document.getElementById('paymentModalDesc').innerText = `Invoice ${invoiceNumber} • $${formattedAmount}`;
+            document.getElementById('confirmPaymentBtn').innerText = `Pay $${formattedAmount}`;
+
+            // Show the modal
+            document.getElementById('paymentModal').classList.add('active');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+            document.getElementById('simulatedPaymentForm').reset();
+            
+            // Reset button state just in case
+            const btn = document.getElementById('confirmPaymentBtn');
+            btn.disabled = false;
+            btn.innerText = `Pay Now`;
+        }
+
+        // Process the Payment Form Submission
+        document.getElementById("simulatedPaymentForm").addEventListener("submit", async (e) => {
+            e.preventDefault(); 
+            
+            // Change button to look like it is processing
+            const btn = document.getElementById('confirmPaymentBtn');
+            btn.disabled = true;
+            btn.innerText = "Processing Payment...";
+
+            try {
+                const res = await authFetch("/mock-bank/charge", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        invoice_id: pendingInvoiceId,
+                        customer_id: pendingCustomerId,
+                        amount: pendingAmount
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    // Close the modal instantly
+                    closePaymentModal();
+                    
+                    alert(`${data.message}\n\n(Wait ~3 seconds, then we will automatically refresh the table to check the webhook result!)`);
+                    
+                    // Automatically refresh after bank processing time (2s + 1s buffer)
+                    setTimeout(() => {
+                        fetchMyInvoices();
+                        fetchMySubscription(); 
+                    }, 3000);
+                } else {
+                    const err = await res.json();
+                    alert("Failed to initiate payment: " + JSON.stringify(err));
+                    btn.disabled = false; // Re-enable button if request failed
+                }
+            } catch (error) {
+                console.error("Payment Error:", error);
+                btn.disabled = false;
+            }
+        });
     </script>
 </body>
 </html>

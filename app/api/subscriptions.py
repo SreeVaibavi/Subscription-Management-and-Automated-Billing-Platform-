@@ -4,10 +4,12 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
 from jose import jwt, JWTError
+import httpx
 
 # Import database connection and models
 from app.database.connection import get_db
 import app.models.core as models
+from app.core import billing_math
 
 router = APIRouter(
     prefix="/subscriptions",
@@ -18,10 +20,7 @@ router = APIRouter(
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def get_current_customer(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    """Extracts the logged-in customer's email from the JWT and fetches them from the DB."""
     try:
-        # We parse the token payload safely. 
-        # (Ensure your auth.py uses "sub" to store the email, which is standard).
         payload = jwt.decode(token, "", options={"verify_signature": False})
         email = payload.get("sub")
         if email is None:
@@ -40,19 +39,18 @@ class SubscriptionCreate(BaseModel):
     plan_id: str
 
 class CancelRequest(BaseModel):
-    immediate: bool = False  # False = end of cycle, True = right now
+    immediate: bool = False
 
 
 # --- ROUTES ---
 
-# 1. CREATE SUBSCRIPTION (Handles Trial Logic)
+# 1. CREATE SUBSCRIPTION 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_subscription(
     sub_data: SubscriptionCreate, 
     db: Session = Depends(get_db), 
     customer: models.Customer = Depends(get_current_customer)
 ):
-    # Check if the plan exists
     plan = db.query(models.Plan).filter(models.Plan.id == sub_data.plan_id).first()
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
@@ -62,8 +60,7 @@ def create_subscription(
     trial_start = None
     trial_end = None
     
-    # State Machine: Route to Trial or Active based on Plan settings
-    if plan.trial_period_days > 0:
+    if plan.trial_period_days and plan.trial_period_days > 0:
         sub_status = models.SubscriptionState.trial
         trial_start = now
         trial_end = now + timedelta(days=plan.trial_period_days)
@@ -74,7 +71,6 @@ def create_subscription(
         else:
             current_period_end = now + timedelta(days=30)
             
-    # Create the Subscription
     new_sub = models.Subscription(
         customer_id=customer.id,
         plan_id=plan.id,
@@ -88,7 +84,12 @@ def create_subscription(
     db.commit()
     db.refresh(new_sub)
     
-    # Write to Audit Log
+    # --- BUG FIX: Generate the initial invoice for brand new subscriptions! ---
+    try:
+        billing_math.generate_standard_invoice(db, new_sub, plan)
+    except Exception as e:
+        print(f"Error generating initial invoice: {e}")
+    
     audit = models.AuditLog(
         entity_type="Subscription",
         entity_id=new_sub.id,
@@ -105,13 +106,15 @@ def get_my_subscriptions(
     db: Session = Depends(get_db), 
     customer: models.Customer = Depends(get_current_customer)
 ):
-    subs = db.query(models.Subscription).filter(models.Subscription.customer_id == customer.id).all()
+    # --- BUG FIX: Order by created_at DESC so the newest plan is ALWAYS first! ---
+    subs = db.query(models.Subscription).filter(
+        models.Subscription.customer_id == customer.id
+    ).order_by(models.Subscription.created_at.desc()).all()
     return subs
 
 # 3. GET ALL SUBSCRIPTIONS (Admin View)
 @router.get("/all")
 def get_all_subscriptions(db: Session = Depends(get_db)):
-    """Fetches all customer subscriptions in the database for admin view."""
     subs = db.query(models.Subscription).all()
     return subs
 
@@ -131,11 +134,14 @@ def change_subscription_plan(
     if not new_plan:
         raise HTTPException(status_code=404, detail="New plan not found")
         
+    old_plan = db.query(models.Plan).filter(models.Plan.id == sub.plan_id).first()
     old_plan_id = sub.plan_id
+    
+    invoice = billing_math.generate_prorated_upgrade_invoice(db, sub, old_plan, new_plan)
+    
     sub.plan_id = new_plan.id
     db.commit()
     
-    # Write to Audit Log
     audit = models.AuditLog(
         entity_type="Subscription",
         entity_id=sub.id,
@@ -146,7 +152,11 @@ def change_subscription_plan(
     db.add(audit)
     db.commit()
     
-    return {"message": "Plan updated successfully", "new_plan_id": new_plan.id}
+    return {
+        "message": "Plan updated successfully", 
+        "new_plan_id": new_plan.id,
+        "invoice_generated": invoice.invoice_number if invoice else None
+    }
 
 # 5. PAUSE SUBSCRIPTION
 @router.put("/{sub_id}/pause")
@@ -166,7 +176,6 @@ def pause_subscription(
     sub.status = models.SubscriptionState.paused
     db.commit()
     
-    # Write to Audit Log
     audit = models.AuditLog(
         entity_type="Subscription",
         entity_id=sub.id,
@@ -193,7 +202,6 @@ def resume_subscription(
     if sub.status != models.SubscriptionState.paused:
         raise HTTPException(status_code=400, detail="Subscription is not paused")
         
-    # State Machine: Resume back to active (or trial if the trial window hasn't expired)
     now = datetime.now(timezone.utc)
     new_status = models.SubscriptionState.active
     if sub.trial_end and sub.trial_end > now:
@@ -203,7 +211,6 @@ def resume_subscription(
     sub.status = new_status
     db.commit()
     
-    # Write to Audit Log
     audit = models.AuditLog(
         entity_type="Subscription",
         entity_id=sub.id,
@@ -235,13 +242,26 @@ def cancel_subscription(
         sub.status = models.SubscriptionState.cancelled
         sub.canceled_at = now
         action = "CANCELLED_IMMEDIATELY"
+        
+        plan = db.query(models.Plan).filter(models.Plan.id == sub.plan_id).first()
+        if plan:
+            refund_invoice = billing_math.generate_refund_invoice(db, sub, plan)
+            if refund_invoice:
+                try:
+                    httpx.post("http://127.0.0.1:8000/mock-bank/refund", json={
+                        "invoice_id": refund_invoice.id,
+                        "customer_id": sub.customer_id,
+                        "amount": abs(refund_invoice.amount_due)
+                    })
+                except Exception as e:
+                    print(f"Error triggering refund: {e}")
+                    
     else:
         sub.cancel_at_period_end = True
         action = "SET_TO_CANCEL_AT_PERIOD_END"
         
     db.commit()
     
-    # Write to Audit Log
     audit = models.AuditLog(
         entity_type="Subscription",
         entity_id=sub.id,

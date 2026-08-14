@@ -5,6 +5,9 @@ from app.core.celery_app import celery_app
 from app.database.connection import SessionLocal 
 import app.models.core as models
 
+# --- NEW: Import the math engine ---
+from app.core import billing_math
+
 @celery_app.task(name="app.tasks.billing.process_renewals")
 def process_renewals():
     """
@@ -42,16 +45,11 @@ def process_renewals():
             if not plan:
                 continue
 
-            # 3. Generate the new Invoice
-            new_invoice = models.Invoice(
-                customer_id=sub.customer_id,
-                subscription_id=sub.id,
-                amount_due=plan.price,
-                currency=plan.currency,
-                status=models.InvoiceStatus.open,
-                due_date=now + timedelta(days=7) # Give them 7 days to pay
-            )
-            db.add(new_invoice)
+            # 3. Generate the new Invoice using the math engine
+            invoice = billing_math.generate_standard_invoice(db, sub, plan)
+            
+            # Set the due date for 7 days from now
+            invoice.due_date = now + timedelta(days=7)
             
             # 4. Push the subscription dates forward for the next cycle
             sub.current_period_start = now

@@ -6,6 +6,10 @@
     <title>BillWise - Admin Control Center</title>
     <!-- Google Font: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FullCalendar CDN -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
     <style>
         :root {
             --primary-mint: #36b37e;
@@ -149,7 +153,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .dashboard-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 1.5rem; margin-bottom: 2rem;
         }
 
@@ -257,6 +261,37 @@
         }
         .form-group input:focus { outline: none; border-color: var(--primary-mint); background: #ffffff; box-shadow: 0 0 0 4px rgba(54, 179, 126, 0.15); }
         .status { margin-top: 15px; font-weight: bold; font-size: 0.9rem; text-align: center;}
+
+        .hero-banner {
+            display: flex; justify-content: space-between; align-items: flex-start; gap: 20px;
+            padding: 1.4rem 1.6rem; margin-bottom: 1.5rem; border-radius: 24px;
+            border: 1px solid rgba(54, 179, 126, 0.18);
+            background: linear-gradient(135deg, rgba(54, 179, 126, 0.12), rgba(46, 204, 113, 0.04));
+            box-shadow: var(--shadow-card);
+        }
+        .hero-banner h2 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.4px; color: var(--text-main); margin-bottom: 0.45rem; }
+        .hero-banner p { color: var(--text-muted); line-height: 1.6; font-size: 0.95rem; }
+        .hero-pill {
+            display: inline-flex; align-items: center; gap: 6px; padding: 0.4rem 0.8rem;
+            border-radius: 999px; background: var(--mint-light); color: var(--text-dark-mint);
+            font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 0.7rem;
+        }
+        .hero-meta { display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-end; }
+        .card { background: linear-gradient(180deg, #ffffff 0%, #f9fff9 100%); }
+
+        @media (max-width: 900px) {
+            .hero-banner { flex-direction: column; }
+            .hero-meta { align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
+        }
+
+        /* Custom Calendar Styles */
+        #calendar { max-width: 100%; font-family: 'Inter', sans-serif; }
+        .fc-event { cursor: pointer; border-radius: 6px; padding: 3px 6px; font-size: 0.75rem; font-weight: 700; border: none; color: #fff !important; }
+        .fc-toolbar-title { font-size: 1.2rem !important; font-weight: 800 !important; color: var(--text-main); }
+        .fc-button-primary { background-color: var(--primary-mint) !important; border-color: var(--primary-mint) !important; text-transform: capitalize !important; font-weight: 600 !important; border-radius: 8px !important; }
+        .fc-button-primary:hover { background-color: var(--primary-hover) !important; }
+        .fc-daygrid-day-number { color: var(--text-muted); font-weight: 600; text-decoration: none; }
+        .fc-col-header-cell-cushion { color: var(--text-main); font-weight: 700; text-decoration: none; padding: 8px 0 !important; }
     </style>
 </head>
 <body>
@@ -271,6 +306,7 @@
                 </div>
                 <ul class="nav-links" id="adminNavList">
                     <li class="active"><a href="#" data-target="admin-overview">📊 <span>Dashboard Overview</span></a></li>
+                    <li><a href="#" data-target="admin-calendar">📅 <span>Billing Calendar</span></a></li>
                     <li><a href="#" data-target="admin-plans">💳 <span>Plans Management</span></a></li>
                     <li><a href="#" data-target="admin-customers">👥 <span>View Customers</span></a></li>
                     <li><a href="#" data-target="admin-subscriptions">📦 <span>View Subscriptions</span></a></li>
@@ -297,23 +333,56 @@
                 </div>
             </header>
 
-            <!-- 1. Dashboard Overview -->
+            <div class="hero-banner">
+                <div>
+                    <div class="hero-pill">Live operations</div>
+                    <h2>Everything you need to run billing smoothly.</h2>
+                    <p>Monitor activity, subscriptions, and invoice health from a comfortable, focused control center.</p>
+                </div>
+                <div class="hero-meta">
+                    <span class="badge active">● Healthy status</span>
+                    <span class="badge warning">Updated today</span>
+                </div>
+            </div>
+
+            <!-- 1. Dashboard Overview (NOW DYNAMIC) -->
             <section id="admin-overview" class="view-section active">
                 <div class="dashboard-grid">
                     <div class="card">
-                        <h3>Total Active Users</h3>
-                        <div class="value">1,492</div>
-                        <p style="color: var(--success); font-size: 0.85rem; font-weight: 600;">+12% from last month</p>
+                        <h3>Total Registered Users</h3>
+                        <div class="value" id="stat-users">...</div>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">Platform accounts</p>
                     </div>
                     <div class="card">
-                        <h3>Recurring Revenue</h3>
-                        <div class="value">$73,108</div>
-                        <p style="color: var(--success); font-size: 0.85rem; font-weight: 600;">ARR calculated output</p>
+                        <h3>Active Subscriptions</h3>
+                        <div class="value" id="stat-subs">...</div>
+                        <p style="color: var(--success); font-size: 0.85rem; font-weight: 600;">Currently generating revenue</p>
+                    </div>
+                    <div class="card">
+                        <h3>Total Revenue Collected</h3>
+                        <div class="value" id="stat-revenue">...</div>
+                        <p style="color: var(--success); font-size: 0.85rem; font-weight: 600;">From paid invoices</p>
+                    </div>
+                    <div class="card">
+                        <h3>Pending Revenue</h3>
+                        <div class="value" id="stat-pending">...</div>
+                        <p style="color: var(--warning); font-size: 0.85rem; font-weight: 600;">Awaiting payment</p>
                     </div>
                 </div>
             </section>
 
-            <!-- 2. Plans Management -->
+            <!-- 2. Billing Calendar -->
+            <section id="admin-calendar" class="view-section">
+                <div style="margin-bottom: 1.5rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 800;">Global Billing Calendar</h2>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 4px;">Easily track when customer invoices are due or have been paid.</p>
+                </div>
+                <div class="card" style="padding: 24px;">
+                    <div id="calendar"></div>
+                </div>
+            </section>
+
+            <!-- 3. Plans Management -->
             <section id="admin-plans" class="view-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                     <div>
@@ -337,7 +406,7 @@
                 </table>
             </section>
 
-            <!-- 3. View Customers -->
+            <!-- 4. View Customers -->
             <section id="admin-customers" class="view-section">
                 <div style="margin-bottom: 1.5rem;">
                     <h2 style="font-size: 1.5rem; font-weight: 800;">View Customers</h2>
@@ -351,7 +420,7 @@
                 </table>
             </section>
 
-            <!-- 4. View Subscriptions (Now Dynamic) -->
+            <!-- 5. View Subscriptions -->
             <section id="admin-subscriptions" class="view-section">
                 <div style="margin-bottom: 1.5rem;"><h2 style="font-size: 1.5rem; font-weight: 800;">View Subscriptions</h2></div>
                 <table>
@@ -362,7 +431,7 @@
                 </table>
             </section>
 
-            <!-- 5. View Invoices (Now Dynamic) -->
+            <!-- 6. View Invoices -->
             <section id="admin-invoices" class="view-section">
                 <div style="margin-bottom: 1.5rem;"><h2 style="font-size: 1.5rem; font-weight: 800;">View Invoices</h2></div>
                 <table>
@@ -402,6 +471,8 @@
     <!-- JAVASCRIPT LOGIC -->
     <script>
         const API_BASE_URL = "http://127.0.0.1:8000";
+        let calendarInstance = null;
+        let globalInvoicesData = [];
 
         // Navigation UI Logic
         const adminLinks = document.querySelectorAll('#adminNavList li a');
@@ -409,10 +480,17 @@
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const targetId = link.getAttribute('data-target');
+                
                 adminLinks.forEach(l => l.parentElement.classList.remove('active'));
                 link.parentElement.classList.add('active');
+                
                 document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
                 document.getElementById(targetId).classList.add('active');
+
+                // Render calendar properly when tab becomes visible
+                if (targetId === 'admin-calendar' && calendarInstance) {
+                    setTimeout(() => { calendarInstance.render(); }, 100);
+                }
             });
         });
 
@@ -425,7 +503,6 @@
                 return;
             }
             
-            // Load Dynamic Data
             fetchPlans();
             fetchCustomers();
             fetchSubscriptions();
@@ -447,21 +524,16 @@
             document.getElementById("createPlanForm").reset();
         }
 
-        // 1. READ PLANS (GET)
         async function fetchPlans() {
             const tbody = document.getElementById("plansTableBody");
-            tbody.innerHTML = "<tr><td colspan='4' style='text-align: center; color: var(--text-muted);'>Fetching plans...</td></tr>";
-            
             try {
                 const response = await fetch(`${API_BASE_URL}/plans/`);
                 const plans = await response.json();
-                
                 tbody.innerHTML = "";
                 if (plans.length === 0) {
-                    tbody.innerHTML = "<tr><td colspan='4' style='text-align: center; color: var(--text-muted);'>No plans found in database.</td></tr>";
+                    tbody.innerHTML = "<tr><td colspan='4' style='text-align: center; color: var(--text-muted);'>No plans found.</td></tr>";
                     return;
                 }
-                
                 plans.forEach(plan => {
                     const features = plan.feature_entitlements ? plan.feature_entitlements.join(", ") : "None";
                     tbody.innerHTML += `
@@ -470,24 +542,20 @@
                             <td><span style="font-weight: 700; color: var(--text-dark-mint);">$${plan.price}</span> / mo</td>
                             <td><small style="color: var(--text-muted);">${features}</small></td>
                             <td>
-                                <button class="btn btn-outline" style="padding: 0.4rem 0.85rem; margin-right: 8px; font-size: 0.8rem;" onclick="editPlan('${plan.id}', '${plan.name}', ${plan.price})">Edit Price</button>
+                                <button class="btn btn-outline" style="padding: 0.4rem 0.85rem; margin-right: 8px; font-size: 0.8rem;" onclick="editPlan('${plan.id}', '${plan.name}', ${plan.price})">Edit</button>
                                 <button class="btn btn-danger" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;" onclick="deletePlan('${plan.id}')">Delete</button>
                             </td>
                         </tr>
                     `;
                 });
             } catch (error) {
-                tbody.innerHTML = `<tr><td colspan='4' style="color: var(--danger); text-align: center;">Error fetching plans. Is FastAPI running?</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan='4' style="color: var(--danger); text-align: center;">Error fetching plans.</td></tr>`;
             }
         }
 
-        // 2. CREATE PLAN (POST)
         document.getElementById("createPlanForm").addEventListener("submit", async (e) => {
             e.preventDefault(); 
             const statusText = document.getElementById("createStatus");
-            statusText.textContent = "Sending request to backend...";
-            statusText.style.color = "var(--text-muted)";
-
             const token = localStorage.getItem("access_token");
             const name = document.getElementById("planName").value;
             const price = parseFloat(document.getElementById("planPrice").value);
@@ -496,10 +564,7 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/plans/`, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}` 
-                    },
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                     body: JSON.stringify({ name: name, price: price, feature_entitlements: features })
                 });
 
@@ -514,144 +579,87 @@
                     statusText.style.color = "var(--danger)";
                 }
             } catch (error) {
-                statusText.textContent = `❌ Network Error: ${error.message}`;
+                statusText.textContent = `❌ Network Error`;
                 statusText.style.color = "var(--danger)";
             }
         });
 
-        // 3. DELETE PLAN (DELETE)
         async function deletePlan(planId) {
-            if (!confirm("Are you sure you want to delete this plan? This action cannot be undone.")) return;
+            if (!confirm("Delete this plan? Cannot be undone.")) return;
             const token = localStorage.getItem("access_token");
             try {
                 const response = await fetch(`${API_BASE_URL}/plans/${planId}`, {
-                    method: "DELETE",
-                    headers: { "Authorization": `Bearer ${token}` }
+                    method: "DELETE", headers: { "Authorization": `Bearer ${token}` }
                 });
-                if (response.ok) {
-                    fetchPlans(); 
-                } else {
-                    const errorData = await response.json();
-                    alert(`Failed to delete plan: ${JSON.stringify(errorData)}`);
-                }
-            } catch (error) {
-                alert("A network error occurred while trying to delete the plan.");
-            }
+                if (response.ok) fetchPlans(); 
+            } catch (error) { alert("Error deleting plan."); }
         }
 
-        // 4. EDIT PLAN (PUT) 
         async function editPlan(planId, currentName, currentPrice) {
             const newPrice = prompt(`Enter new monthly price for ${currentName}:`, currentPrice);
-            if (newPrice === null || newPrice.trim() === "") return; 
+            if (!newPrice) return; 
             const parsedPrice = parseFloat(newPrice);
-            if (isNaN(parsedPrice)) {
-                alert("Please enter a valid number for the price.");
-                return;
-            }
-
+            
             const token = localStorage.getItem("access_token");
             try {
                 const response = await fetch(`${API_BASE_URL}/plans/${planId}`, {
                     method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                     body: JSON.stringify({ price: parsedPrice })
                 });
-                if (response.ok) {
-                    fetchPlans(); 
-                } else {
-                    const errorData = await response.json();
-                    alert(`Failed to update plan: ${JSON.stringify(errorData)}`);
-                }
-            } catch (error) {
-                alert("A network error occurred while trying to update the plan.");
-            }
+                if (response.ok) fetchPlans(); 
+            } catch (error) { alert("Error updating plan."); }
         }
 
-        // 5. READ CUSTOMERS (GET)
         async function fetchCustomers() {
             const tbody = document.getElementById("customersTableBody");
             const token = localStorage.getItem("access_token");
-            if (!token) return;
-
             try {
-                const response = await fetch(`${API_BASE_URL}/users/`, {
-                    method: "GET",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "Content-Type": "application/json"
-                    }
+                const response = await fetch(`${API_BASE_URL}/users/all`, {
+                    method: "GET", headers: { "Authorization": `Bearer ${token}` }
                 });
-                
-                if (!response.ok) throw new Error("Failed to fetch data");
-
                 const customers = await response.json();
                 tbody.innerHTML = ""; 
                 
-                if (customers.length === 0) {
-                    tbody.innerHTML = "<tr><td colspan='4' style='text-align: center; color: var(--text-muted);'>No registered customers found in database.</td></tr>";
-                    return;
-                }
-                
-                customers.forEach(customer => {
-                    const name = customer.name || customer.username || "N/A";
-                    const email = customer.email || "N/A";
-                    const joinedDate = customer.created_at ? new Date(customer.created_at).toLocaleDateString() : "Unknown";
-                    
-                    const isActive = customer.is_active !== false; 
-                    const statusText = isActive ? "ACTIVE" : "INACTIVE";
-                    const badgeClass = isActive ? "badge active" : "badge danger"; 
+                // --- NEW: Update Dashboard User Metric ---
+                document.getElementById('stat-users').innerText = customers.length;
 
+                customers.forEach(customer => {
+                    const name = customer.full_name || customer.email.split('@')[0] || "N/A";
+                    const joinedDate = customer.created_at ? new Date(customer.created_at).toLocaleDateString() : "Unknown";
                     tbody.innerHTML += `
                         <tr>
                             <td style="font-weight: 600;">${name}</td>
-                            <td>${email}</td>
+                            <td>${customer.email}</td>
                             <td>${joinedDate}</td>
-                            <td><span class="${badgeClass}">${statusText}</span></td>
+                            <td><span class="badge active">ACTIVE</span></td>
                         </tr>
                     `;
                 });
-            } catch (error) {
-                tbody.innerHTML = `<tr><td colspan='4' style="color: var(--danger); text-align: center;">Error fetching customer records from database.</td></tr>`;
-            }
+            } catch (error) { tbody.innerHTML = `<tr><td colspan='4'>Error fetching customers</td></tr>`; }
         }
 
-        // 6. READ ALL SUBSCRIPTIONS (GET)
         async function fetchSubscriptions() {
             const tbody = document.getElementById("subscriptionsTableBody");
             const token = localStorage.getItem("access_token");
-            if (!token) return;
-
             try {
-                // NOTE: Requires a GET /subscriptions/all endpoint for admins
                 const response = await fetch(`${API_BASE_URL}/subscriptions/all`, {
-                    method: "GET",
-                    headers: { "Authorization": `Bearer ${token}` }
+                    method: "GET", headers: { "Authorization": `Bearer ${token}` }
                 });
-                
-                if (!response.ok) throw new Error("Failed to fetch data");
-
                 const subscriptions = await response.json();
                 tbody.innerHTML = ""; 
-                
-                if (subscriptions.length === 0) {
-                    tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--text-muted);'>No active subscriptions found.</td></tr>";
-                    return;
-                }
-                
+
+                // --- NEW: Update Dashboard Subscriptions Metric ---
+                const activeCount = subscriptions.filter(s => s.status === 'active').length;
+                document.getElementById('stat-subs').innerText = activeCount;
+
                 subscriptions.forEach(sub => {
                     const shortId = sub.id ? sub.id.split('-')[0].toUpperCase() : "N/A";
                     const shortCustId = sub.customer_id ? sub.customer_id.split('-')[0].toUpperCase() : "N/A";
                     const shortPlanId = sub.plan_id ? sub.plan_id.split('-')[0].toUpperCase() : "N/A";
                     const renewalDate = sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : "Unknown";
                     
-                    let badgeClass = "badge";
-                    if (sub.status === "active") badgeClass = "badge active";
-                    else if (sub.status === "trial") badgeClass = "badge warning";
-                    else badgeClass = "badge danger";
-
+                    let badgeClass = sub.status === "active" ? "badge active" : (sub.status === "trial" ? "badge warning" : "badge danger");
                     tbody.innerHTML += `
                         <tr>
                             <td style="font-weight: 600;">#SUB-${shortId}</td>
@@ -662,53 +670,102 @@
                         </tr>
                     `;
                 });
-            } catch (error) {
-                tbody.innerHTML = `<tr><td colspan='5' style="color: var(--danger); text-align: center;">Error fetching subscriptions. Endpoint /subscriptions/all might be missing.</td></tr>`;
-            }
+            } catch (error) { tbody.innerHTML = `<tr><td colspan='5'>Error fetching subscriptions.</td></tr>`; }
         }
 
-        // 7. READ ALL INVOICES (GET)
         async function fetchInvoices() {
             const tbody = document.getElementById("invoicesTableBody");
             const token = localStorage.getItem("access_token");
-            if (!token) return;
-
             try {
-                // NOTE: Requires a GET /invoices/ endpoint 
                 const response = await fetch(`${API_BASE_URL}/invoices/`, {
-                    method: "GET",
-                    headers: { "Authorization": `Bearer ${token}` }
+                    method: "GET", headers: { "Authorization": `Bearer ${token}` }
                 });
-                
-                if (!response.ok) throw new Error("Failed to fetch data");
-
-                const invoices = await response.json();
+                globalInvoicesData = await response.json();
                 tbody.innerHTML = ""; 
                 
-                if (invoices.length === 0) {
-                    tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--text-muted);'>No invoices found in database.</td></tr>";
-                    return;
-                }
-                
-                invoices.forEach(inv => {
+                let totalRevenue = 0;
+                let pendingRevenue = 0;
+
+                globalInvoicesData.forEach(inv => {
                     const shortId = inv.id ? inv.id.split('-')[0].toUpperCase() : "N/A";
                     const shortCustId = inv.customer_id ? inv.customer_id.split('-')[0].toUpperCase() : "N/A";
                     const dueDate = inv.due_date ? new Date(inv.due_date).toLocaleDateString() : "Unknown";
-                    
                     const badgeClass = inv.status === "paid" ? "badge active" : "badge warning";
+                    
+                    const amount = parseFloat(inv.amount_due) || 0;
+
+                    // --- NEW: Calculate Revenue Metrics ---
+                    if (inv.status === "paid") {
+                        totalRevenue += amount;
+                    } else if (inv.status === "open") {
+                        pendingRevenue += amount;
+                    }
 
                     tbody.innerHTML += `
                         <tr>
                             <td style="font-weight: 600;">#INV-${shortId}</td>
                             <td>CUST-${shortCustId}</td>
-                            <td style="font-weight: 700; color: var(--text-dark-mint);">$${parseFloat(inv.amount_due).toFixed(2)}</td>
+                            <td style="font-weight: 700; color: var(--text-dark-mint);">$${amount.toFixed(2)}</td>
                             <td>${dueDate}</td>
                             <td><span class="${badgeClass}">${inv.status.toUpperCase()}</span></td>
                         </tr>
                     `;
                 });
-            } catch (error) {
-                tbody.innerHTML = `<tr><td colspan='5' style="color: var(--danger); text-align: center;">Error fetching invoices. Endpoint /invoices/ might be missing.</td></tr>`;
+                
+                // --- NEW: Update Dashboard Revenue Metrics ---
+                document.getElementById('stat-revenue').innerText = `$${totalRevenue.toFixed(2)}`;
+                document.getElementById('stat-pending').innerText = `$${pendingRevenue.toFixed(2)}`;
+
+                // Build the calendar using the fetched invoice data
+                buildCalendar();
+            } catch (error) { tbody.innerHTML = `<tr><td colspan='5'>Error fetching invoices.</td></tr>`; }
+        }
+
+        // --- CALENDAR LOGIC ---
+        function buildCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            if (!calendarEl) return;
+
+            // Map backend invoices to FullCalendar event objects
+            const calendarEvents = globalInvoicesData.map(inv => {
+                const shortCustId = inv.customer_id ? inv.customer_id.split('-')[0].toUpperCase() : "N/A";
+                const isPaid = inv.status === "paid";
+                
+                // Green for paid, yellow for open, red for uncollectible
+                const eventColor = isPaid ? "#10b981" : (inv.status === "uncollectible" ? "#ef4444" : "#f59e0b");
+                
+                // Get just the YYYY-MM-DD from the datetime
+                const dateStr = inv.due_date ? inv.due_date.split('T')[0] : new Date().toISOString().split('T')[0];
+
+                return {
+                    title: `$${parseFloat(inv.amount_due).toFixed(2)} (${shortCustId})`,
+                    start: dateStr,
+                    color: eventColor,
+                    allDay: true,
+                    extendedProps: { invoiceId: inv.id ? inv.id.split('-')[0].toUpperCase() : "N/A", status: inv.status }
+                };
+            });
+
+            if (calendarInstance) {
+                calendarInstance.destroy();
+            }
+
+            calendarInstance = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth'
+                },
+                events: calendarEvents,
+                eventClick: function(info) {
+                    alert(`Invoice Details:\n\nReference: #INV-${info.event.extendedProps.invoiceId}\nStatus: ${info.event.extendedProps.status.toUpperCase()}\nAmount & Customer: ${info.event.title}`);
+                }
+            });
+            
+            // Only render if the calendar tab is currently active
+            if (document.getElementById('admin-calendar').classList.contains('active')) {
+                calendarInstance.render();
             }
         }
     </script>
