@@ -3,467 +3,574 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BillWise - Authentication</title>
-    
+    <title>BillWise — Sign In</title>
+    <meta name="description" content="Sign in to BillWise — the premium billing and subscription management platform for modern businesses.">
+
     <!-- Google Identity Services (Untouched logic) -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
+
     <!-- Link to the external JavaScript file (Untouched logic) -->
     <script src="script.js" defer></script>
 
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
     <!-- Google Font: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Light Mint & Emerald SaaS Design Theme -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
+
     <style>
+        /* ── Design Tokens ── */
         :root {
-            --primary-mint: #36b37e;
-            --primary-hover: #2e9b6d;
-            --mint-light: #e6f7f0;
-            --mint-pill: #d1fae5;
-            --text-dark-mint: #1b7a4e;
-            --bg-page: #f4f7f6;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --text-dim: #94a3b8;
-            --border-color: #e2e8f0;
-            --border-focus: #36b37e;
-            --input-bg: #f8fafc;
-            --shadow-card: 0 20px 40px rgba(54, 179, 126, 0.08), 0 8px 16px rgba(0, 0, 0, 0.04);
-            --shadow-btn: 0 4px 14px rgba(54, 179, 126, 0.35);
+            --accent:       #E8453C;
+            --accent-hover: #D03530;
+            --accent-soft:  rgba(232,69,60,0.12);
+            --dark-panel:   #111111;
+            --bg:           #EFEFED;
+            --surface:      #FFFFFF;
+            --text:         #111111;
+            --text-muted:   #6B7280;
+            --text-dim:     #9CA3AF;
+            --border:       #E5E5E3;
+            --success:      #22C55E;
+            --r-lg:         14px;
+            --r-xl:         22px;
+            --r-pill:       999px;
+            --ease:         cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background-color: var(--bg-page);
-            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background: var(--bg);
             min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            font-feature-settings: 'cv11';
+            overflow-x: hidden;
+        }
+
+        /* ── Layout ── */
+        .auth-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* ── Left Branding Panel ── */
+        .auth-brand {
+            background: var(--dark-panel);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative grid lines */
+        .auth-brand::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        /* Coral glow blob */
+        .auth-brand::after {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 340px;
+            height: 340px;
+            background: radial-gradient(circle, rgba(232,69,60,0.18) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .brand-top { position: relative; z-index: 1; }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 3.5rem;
+        }
+
+        .brand-logo-mark {
+            width: 38px;
+            height: 38px;
+            background: var(--accent);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow-x: hidden;
-            overflow-y: auto;
-            position: relative;
-            padding: 40px 0;
+            font-weight: 900;
+            font-size: 15px;
+            color: #fff;
+            letter-spacing: -0.5px;
+            flex-shrink: 0;
         }
 
-        /* Curved Mint Green Top Hero Banner Background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 45vh;
-            background: linear-gradient(135deg, #36b37e 0%, #2ecc71 50%, #48bb78 100%);
-            border-bottom-left-radius: 50% 12%;
-            border-bottom-right-radius: 50% 12%;
-            z-index: 0;
-            pointer-events: none;
-            box-shadow: 0 10px 30px rgba(54, 179, 126, 0.2);
-        }
-
-        /* Decorative curved line overlay */
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: -10%;
-            width: 120%;
-            height: 48vh;
-            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Container & Glassmorphism Card Style */
-        .container {
-            width: min(100%, 1120px);
-            padding: 20px;
-            z-index: 10;
-            margin: auto;
-            display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 24px;
-            align-items: center;
-            animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-        }
-
-        @keyframes cardEntrance {
-            from {
-                opacity: 0;
-                transform: translateY(25px) scale(0.97);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .hero-panel {
-            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(230,247,240,0.92));
-            border: 1px solid rgba(255,255,255,0.75);
-            border-radius: 30px;
-            padding: 32px;
-            box-shadow: var(--shadow-card);
-            backdrop-filter: blur(10px);
-        }
-
-        .hero-panel h1 {
-            font-size: 2rem;
+        .brand-logo-name {
+            font-size: 1.2rem;
             font-weight: 800;
-            letter-spacing: -0.8px;
-            color: var(--text-main);
-            margin: 14px 0 10px;
+            color: #FFFFFF;
+            letter-spacing: -0.4px;
         }
 
-        .hero-panel p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.7;
-        }
-
-        .hero-list {
-            list-style: none;
-            margin: 18px 0 0;
-            display: grid;
-            gap: 8px;
-        }
-
-        .hero-list li {
-            display: flex;
+        .brand-eyebrow {
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.92rem;
-            color: var(--text-main);
-            font-weight: 600;
-        }
-
-        .hero-list li::before {
-            content: '✓';
-            color: var(--primary-mint);
-            font-weight: 800;
-        }
-
-        .hero-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .hero-badges span {
-            background: rgba(54, 179, 126, 0.12);
-            color: var(--text-dark-mint);
-            padding: 8px 12px;
-            border-radius: 999px;
-            font-size: 0.8rem;
+            gap: 6px;
+            font-size: 0.72rem;
             font-weight: 700;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            border-radius: 28px;
-            padding: 44px 40px;
-            box-shadow: var(--shadow-card);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            width: 100%;
-            max-width: 500px;
-            justify-self: end;
-        }
-
-        .card:hover {
-            box-shadow: 0 25px 50px rgba(54, 179, 126, 0.12), 0 10px 20px rgba(0, 0, 0, 0.05);
-            transform: translateY(-2px);
-        }
-
-        /* Top mint bar accent */
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #36b37e, #2ecc71, #52b788);
-        }
-
-        .platform-badge {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .platform-badge span {
-            background: var(--mint-light);
-            color: var(--text-dark-mint);
-            padding: 6px 16px;
-            border-radius: 30px;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1px;
+            letter-spacing: 1.4px;
             text-transform: uppercase;
-            display: inline-block;
+            color: var(--accent);
+            background: rgba(232,69,60,0.15);
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--r-pill);
+            margin-bottom: 1.25rem;
         }
 
-        .brand-header {
-            text-align: center;
-            margin-bottom: 28px;
+        .brand-headline {
+            font-size: clamp(1.75rem, 3vw, 2.4rem);
+            font-weight: 900;
+            color: #FFFFFF;
+            line-height: 1.2;
+            letter-spacing: -1px;
+            margin-bottom: 1rem;
         }
 
-        .brand-header h2 {
-            font-size: 30px;
+        .brand-headline span {
+            color: var(--accent);
+        }
+
+        .brand-desc {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            max-width: 380px;
+        }
+
+        .brand-features {
+            list-style: none;
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-features li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .brand-feature-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            background: rgba(255,255,255,0.07);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--accent);
+        }
+
+        .brand-bottom {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-stats {
+            display: flex;
+            gap: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .brand-stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .brand-stat-value {
+            font-size: 1.4rem;
             font-weight: 800;
-            letter-spacing: -0.8px;
-            margin-bottom: 8px;
-            color: var(--text-main);
+            color: #FFFFFF;
+            letter-spacing: -0.5px;
         }
 
-        .brand-header p {
-            font-size: 13px;
-            color: var(--text-muted);
+        .brand-stat-label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.35);
             font-weight: 500;
         }
 
+        /* ── Right Auth Card ── */
+        .auth-right {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            background: var(--bg);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 2.75rem 2.5rem;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05);
+            animation: authCardIn 0.5s var(--ease) both;
+        }
+
+        @keyframes authCardIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Platform badge */
+        .auth-platform-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: rgba(232,69,60,0.1);
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--r-pill);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Card header — controlled by script.js via IDs */
+        .auth-card-header {
+            margin-bottom: 2rem;
+        }
+
+        #form-title {
+            font-size: 1.7rem;
+            font-weight: 900;
+            letter-spacing: -0.7px;
+            color: var(--text);
+            margin-bottom: 0.4rem;
+        }
+
+        #form-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Google button wrapper */
+        .google-btn-wrapper {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Divider */
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            color: var(--text-dim);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Input group */
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.1rem;
         }
 
         .input-group label {
             display: block;
-            font-size: 12px;
+            font-size: 0.78rem;
             font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 8px;
+            color: var(--text);
+            margin-bottom: 0.45rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
         }
 
         .input-group input {
             width: 100%;
-            padding: 14px 18px;
-            background: var(--input-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            color: var(--text-main);
-            font-size: 14px;
+            padding: 0.75rem 1rem;
+            background: #FAFAF8;
+            border: 1.5px solid #E8E8E6;
+            border-radius: var(--r-lg);
+            color: var(--text);
+            font-size: 0.9rem;
             font-weight: 500;
             font-family: 'Inter', sans-serif;
-            transition: all 0.25s ease;
+            transition: all 0.2s ease;
         }
 
-        .input-group input::placeholder {
-            color: var(--text-dim);
-        }
+        .input-group input::placeholder { color: var(--text-dim); }
 
         .input-group input:focus {
             outline: none;
-            border-color: var(--border-focus);
-            background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(54, 179, 126, 0.15);
+            border-color: var(--accent);
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(232,69,60,0.12);
         }
 
-        .btn {
+        /* Primary CTA button */
+        .btn, .btn-primary {
             width: 100%;
-            padding: 15px;
-            border-radius: 30px;
+            padding: 0.85rem;
+            border-radius: var(--r-pill);
             border: none;
-            font-size: 15px;
+            font-size: 0.9rem;
             font-weight: 700;
             font-family: 'Inter', sans-serif;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            margin-top: 8px;
-            letter-spacing: 0.3px;
+            transition: all 0.22s var(--ease);
+            letter-spacing: 0.2px;
+            margin-top: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #36b37e 0%, #2ecc71 100%);
-            color: #ffffff;
-            box-shadow: var(--shadow-btn);
+            background: var(--accent);
+            color: #FFFFFF;
+            box-shadow: 0 4px 16px rgba(232,69,60,0.32);
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #2e9b6d 0%, #27ae60 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(54, 179, 126, 0.45);
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 22px rgba(232,69,60,0.4);
         }
 
-        .btn-primary:active {
-            transform: translateY(0);
-        }
+        .btn-primary:active { transform: translateY(0); }
 
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 24px 0;
-            color: var(--text-dim);
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-        }
-
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .divider::before { margin-right: 14px; }
-        .divider::after { margin-left: 14px; }
-
+        /* Toggle text */
         .switch-text {
             text-align: center;
-            margin-top: 24px;
-            font-size: 13px;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
             font-weight: 500;
         }
 
         .switch-text a {
-            color: var(--primary-mint);
+            color: var(--accent);
             text-decoration: none;
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: color 0.15s ease;
         }
 
         .switch-text a:hover {
-            color: var(--primary-hover);
+            color: var(--accent-hover);
             text-decoration: underline;
         }
 
-        .google-btn-wrapper {
-            position: relative;
-            z-index: 1;
-        }
+        /* Hidden class used by script.js */
+        .hidden { display: none !important; }
 
-        /* Class required by script.js to toggle forms */
-        .hidden {
-            display: none !important;
-        }
-
+        /* ── Responsive ── */
         @media (max-width: 900px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-
-            .card {
-                justify-self: stretch;
-                max-width: none;
-            }
+            .auth-layout { grid-template-columns: 1fr; }
+            .auth-brand { display: none; }
+            .auth-right { padding: 2rem 1.25rem; min-height: 100vh; }
         }
 
-        @media (max-width: 520px) {
-            .card {
-                padding: 32px 24px;
-                border-radius: 20px;
-            }
-            .brand-header h2 {
-                font-size: 24px;
-            }
-            .hero-panel {
-                padding: 24px;
-            }
+        @media (max-width: 440px) {
+            .auth-card { padding: 2rem 1.5rem; border-radius: 20px; }
+            #form-title { font-size: 1.45rem; }
         }
     </style>
+
+    <link rel="stylesheet" href="ui-redesign.css">
 </head>
 <body>
 
-    <div class="container">
-        <div class="hero-panel">
-            <span class="platform-badge"><span>Fintech experience</span></span>
-            <h1>Elevated billing access for modern teams.</h1>
-            <p>Sign in securely, review plans, and keep every subscription organized in one calm, polished workspace.</p>
-            <ul class="hero-list">
-                <li>Secure Google sign-in</li>
-                <li>Fast plan and invoice visibility</li>
-                <li>Designed for a smoother customer experience</li>
-            </ul>
-            <div class="hero-badges">
-                <span>⚡ Fast onboarding</span>
-                <span>🔒 Trusted access</span>
-                <span>📈 Clear overview</span>
+    <div class="auth-layout">
+
+        <!-- ── Left: Branding Panel ── -->
+        <div class="auth-brand">
+            <div class="brand-top">
+                <div class="brand-logo">
+                    <div class="brand-logo-mark">BW</div>
+                    <span class="brand-logo-name">BillWise</span>
+                </div>
+
+                <div class="brand-eyebrow">
+                    <i data-lucide="zap" style="width:11px;height:11px;"></i>
+                    Billing Platform
+                </div>
+
+                <h1 class="brand-headline">
+                    Subscription<br>billing, made<br><span>effortless.</span>
+                </h1>
+
+                <p class="brand-desc">
+                    Manage plans, automate invoices, and track every payment — all from one calm, professional workspace.
+                </p>
+
+                <ul class="brand-features">
+                    <li>
+                        <div class="brand-feature-icon">
+                            <i data-lucide="shield-check" style="width:13px;height:13px;"></i>
+                        </div>
+                        Secure authentication with Google SSO
+                    </li>
+                    <li>
+                        <div class="brand-feature-icon">
+                            <i data-lucide="receipt" style="width:13px;height:13px;"></i>
+                        </div>
+                        Automated invoice generation &amp; PDF export
+                    </li>
+                    <li>
+                        <div class="brand-feature-icon">
+                            <i data-lucide="trending-up" style="width:13px;height:13px;"></i>
+                        </div>
+                        Real-time subscription &amp; revenue tracking
+                    </li>
+                    <li>
+                        <div class="brand-feature-icon">
+                            <i data-lucide="calendar" style="width:13px;height:13px;"></i>
+                        </div>
+                        Visual billing calendar with due-date alerts
+                    </li>
+                </ul>
+            </div>
+
+            <div class="brand-bottom">
+                <div class="brand-stats">
+                    <div class="brand-stat-item">
+                        <span class="brand-stat-value">99.9%</span>
+                        <span class="brand-stat-label">Uptime SLA</span>
+                    </div>
+                    <div class="brand-stat-item">
+                        <span class="brand-stat-value">256-bit</span>
+                        <span class="brand-stat-label">Encryption</span>
+                    </div>
+                    <div class="brand-stat-item">
+                        <span class="brand-stat-value">< 200ms</span>
+                        <span class="brand-stat-label">API response</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="card">
-            
-            <div class="platform-badge">
-                <span>BillWise Platform</span>
-            </div>
+        <!-- ── Right: Auth Card ── -->
+        <div class="auth-right">
+            <div class="auth-card">
 
-            <!-- Dynamic Header controlled by script.js -->
-            <div class="brand-header">
-                <h2 id="form-title">Sign In</h2>
-                <p id="form-subtitle">Welcome back to the Billing Platform</p>
-            </div>
-
-            <!-- Google Auth Section (Untouched logic) -->
-            <div id="g_id_onload"
-                 data-client_id="947976051057-ncvdo5vr5ov3uqm49vvbg3kk9oq16t4v.apps.googleusercontent.com"
-                 data-context="signin"
-                 data-ux_mode="popup"
-                 data-callback="handleGoogleLogin"
-                 data-auto_prompt="false">
-            </div>
-            
-            <div class="google-btn-wrapper" style="display: flex; justify-content: center; margin-bottom: 20px;">
-                <div class="g_id_signin" 
-                     data-type="standard" 
-                     data-shape="rectangular" 
-                     data-theme="outline" 
-                     data-text="continue_with" 
-                     data-size="large" 
-                     data-logo_alignment="left">
+                <!-- Platform Badge -->
+                <div class="auth-platform-badge">
+                    <i data-lucide="lock" style="width:10px;height:10px;"></i>
+                    BillWise Platform
                 </div>
+
+                <!-- Dynamic Header — IDs controlled by script.js -->
+                <div class="auth-card-header">
+                    <h2 id="form-title">Sign In</h2>
+                    <p id="form-subtitle">Welcome back to the Billing Platform</p>
+                </div>
+
+                <!-- Google Auth Section (Untouched logic) -->
+                <div id="g_id_onload"
+                     data-client_id="947976051057-ncvdo5vr5ov3uqm49vvbg3kk9oq16t4v.apps.googleusercontent.com"
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-callback="handleGoogleLogin"
+                     data-auto_prompt="false">
+                </div>
+
+                <div class="google-btn-wrapper">
+                    <div class="g_id_signin"
+                         data-type="standard"
+                         data-shape="rectangular"
+                         data-theme="outline"
+                         data-text="continue_with"
+                         data-size="large"
+                         data-logo_alignment="left">
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="auth-divider">or</div>
+
+                <!-- Standard Sign In Form (Untouched IDs) -->
+                <form id="signin-form">
+                    <div class="input-group">
+                        <label for="signin-email">Email Address</label>
+                        <input type="email" id="signin-email" required placeholder="you@company.com">
+                    </div>
+                    <div class="input-group">
+                        <label for="signin-password">Password</label>
+                        <input type="password" id="signin-password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                </form>
+
+                <!-- Standard Sign Up Form (Untouched IDs) -->
+                <form id="signup-form" class="hidden">
+                    <div class="input-group">
+                        <label for="signup-email">Email Address</label>
+                        <input type="email" id="signup-email" required placeholder="you@company.com">
+                    </div>
+                    <div class="input-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" required placeholder="Create a strong password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Account</button>
+                </form>
+
+                <!-- Toggle between Sign In and Sign Up (Untouched logic) -->
+                <div class="switch-text" id="toggle-container">
+                    Don't have an account? <a href="#" onclick="toggleForms(); return false;">Sign up</a>
+                </div>
+
             </div>
-            
-            <div class="divider">OR</div>
-
-            <!-- Standard Sign In Form (Untouched IDs) -->
-            <form id="signin-form">
-                <div class="input-group">
-                    <label for="signin-email">Email Address</label>
-                    <input type="email" id="signin-email" required placeholder="you@company.com">
-                </div>
-                <div class="input-group">
-                    <label for="signin-password">Password</label>
-                    <input type="password" id="signin-password" required placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn btn-primary">Sign In</button>
-            </form>
-
-            <!-- Standard Sign Up Form (Untouched IDs) -->
-            <form id="signup-form" class="hidden">
-                <div class="input-group">
-                    <label for="signup-email">Email Address</label>
-                    <input type="email" id="signup-email" required placeholder="you@company.com">
-                </div>
-                <div class="input-group">
-                    <label for="signup-password">Password</label>
-                    <input type="password" id="signup-password" required placeholder="Create a password">
-                </div>
-                <button type="submit" class="btn btn-primary">Create Account</button>
-            </form>
-
-            <!-- Toggle between Sign In and Sign Up (Untouched logic) -->
-            <div class="switch-text" id="toggle-container">
-                Don't have an account? <a href="#" onclick="toggleForms(); return false;">Sign up</a>
-            </div>
-
         </div>
+
     </div>
+
+    <script>
+        // Initialize Lucide icons
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    </script>
 
 </body>
 </html>

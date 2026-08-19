@@ -3,35 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BillWise - User Dashboard</title>
-    <!-- Google Font: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-mint: #36b37e;
-            --primary-hover: #2e9b6d;
-            --mint-light: #e6f7f0;
-            --mint-pill: #d1fae5;
-            --text-dark-mint: #1b7a4e;
-            --bg-page: #f4f7f6;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --text-dim: #94a3b8;
-            --border-color: #e2e8f0;
-            --border-hover: #cbd5e1;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.02);
-            --shadow-btn: 0 4px 14px rgba(54, 179, 126, 0.35);
-        }
+    <title>BillWise — My Dashboard</title>
+    <meta name="description" content="Manage your subscriptions, billing, and account on BillWise.">
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    <!-- Google Fonts: Inter + JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <!-- Chart.js for invoice sparkline -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Design System -->
+    <link rel="stylesheet" href="ui-redesign.css">
+
+    <style>
+        /* ── Page-specific additions ── */
+        :root {
+            /* Keep original vars so inline JS-injected styles work */
+            --primary-mint:    #E8453C;
+            --primary-hover:   #D03530;
+            --mint-light:      rgba(232,69,60,0.1);
+            --text-dark-mint:  #C03530;
+            --bg-page:         #EFEFED;
+            --card-bg:         #FFFFFF;
+            --text-main:       #111111;
+            --text-muted:      #6B7280;
+            --text-dim:        #9CA3AF;
+            --border-color:    #E5E5E3;
+            --success:         #22C55E;
+            --danger:          #EF4444;
+            --warning:         #F59E0B;
+            --shadow-card:     0 2px 8px rgba(0,0,0,0.06);
+            --shadow-btn:      0 4px 14px rgba(232,69,60,0.28);
         }
 
         body {
@@ -40,326 +45,926 @@
             min-height: 100vh;
             display: flex;
             overflow-x: hidden;
-            position: relative;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Top mint green header curve background */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 180px;
-            background: linear-gradient(135deg, #36b37e 0%, #2ecc71 100%);
-            z-index: -1;
-            pointer-events: none;
-            box-shadow: 0 10px 25px rgba(54, 179, 126, 0.15);
-        }
+        /* Remove old green top bar */
+        body::before { display: none !important; }
 
-        .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; pointer-events: none;
-        }
-
+        /* ── App Shell ── */
         .app-container { display: flex; width: 100%; min-height: 100vh; }
 
+        /* ── Sidebar ── */
         aside {
-            width: 270px;
-            background: #ffffff;
-            border-right: 1px solid var(--border-color);
+            width: 260px;
+            background: #111111;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 2rem 1.25rem;
+            padding: 1.5rem 1rem;
             position: fixed;
             height: 100vh;
-            z-index: 100;
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.03);
+            top: 0;
+            left: 0;
+            z-index: 200;
+            border-right: 1px solid rgba(255,255,255,0.04);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        /* Logo area */
         .logo-area {
-            padding: 0.5rem 0.75rem;
-            margin-bottom: 2rem;
-        }
-
-        .logo-area h2 {
-            font-size: 1.35rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--primary-mint);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            padding: 0.4rem 0.75rem 1.75rem;
         }
 
-        .logo-area::after {
-            content: 'USER';
-            font-size: 9px;
+        .logo-mark {
+            width: 34px;
+            height: 34px;
+            background: #E8453C;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 13px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .logo-text-wrap { display: flex; flex-direction: column; }
+
+        .logo-title {
+            font-size: 1rem;
             font-weight: 800;
-            letter-spacing: 1px;
-            background: var(--mint-light);
-            color: var(--text-dark-mint);
-            padding: 2px 8px;
-            border-radius: 12px;
-            margin-left: 8px;
-            vertical-align: middle;
+            color: #FFFFFF;
+            letter-spacing: -0.3px;
+            line-height: 1.1;
         }
 
-        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; flex-grow: 1; }
-        .nav-links li a {
-            display: flex; align-items: center; gap: 0.85rem; padding: 0.85rem 1rem;
-            color: var(--text-muted); text-decoration: none; border-radius: 14px;
-            transition: all 0.2s ease; font-weight: 600;
-            font-size: 0.9rem;
-        }
-        .nav-links li a:hover {
-            color: var(--text-main);
-            background: #f8fafc;
-            transform: translateX(3px);
-        }
-        .nav-links li.active a {
-            background: var(--mint-light);
-            color: var(--text-dark-mint);
+        .logo-subtitle {
+            font-size: 9px;
             font-weight: 700;
-            box-shadow: 0 2px 8px rgba(54, 179, 126, 0.12);
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: #E8453C;
+            background: rgba(232,69,60,0.15);
+            padding: 1px 6px;
+            border-radius: 999px;
+            margin-top: 3px;
+            display: inline-block;
+            width: fit-content;
         }
 
-        main { 
-            margin-left: 270px; 
-            flex-grow: 1; 
-            padding: 2.25rem 3rem; 
-            overflow-y: auto; 
+        /* Nav section label */
+        .nav-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.28);
+            padding: 0 0.75rem;
+            margin-bottom: 0.35rem;
+            margin-top: 1.25rem;
+            display: block;
+        }
+
+        /* Nav links — IDs/data-target preserved */
+        .nav-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .nav-links li a {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.65rem 0.75rem;
+            color: rgba(255,255,255,0.48);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.18s ease;
+        }
+
+        .nav-links li a .nav-icon {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            opacity: 0.65;
+        }
+
+        .nav-links li a:hover {
+            color: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.07);
+        }
+        .nav-links li a:hover .nav-icon { opacity: 1; }
+
+        .nav-links li.active a {
+            color: #fff;
+            background: #E8453C;
+            font-weight: 600;
+            box-shadow: 0 4px 14px rgba(232,69,60,0.32);
+        }
+        .nav-links li.active a .nav-icon { opacity: 1; }
+
+        /* Sidebar bottom */
+        .sidebar-bottom {
+            border-top: 1px solid rgba(255,255,255,0.07);
+            padding-top: 1rem;
+        }
+
+        /* Mobile overlay & toggle */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 199;
+        }
+        .sidebar-overlay.open { display: block; }
+
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 300;
+            width: 40px;
+            height: 40px;
+            background: #111111;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── Main Content ── */
+        main {
+            margin-left: 260px;
+            flex-grow: 1;
+            padding: 2rem 2.5rem;
             min-height: 100vh;
+            overflow-y: auto;
         }
 
+        /* ── Top Bar (header-bar) ── */
         .header-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 2.25rem; background: var(--card-bg);
-            padding: 1.35rem 2rem; border-radius: 24px; 
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-card);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.75rem;
+            background: #FFFFFF;
+            padding: 1rem 1.5rem;
+            border-radius: 20px;
+            border: 1px solid #E5E5E3;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
         }
 
-        .user-welcome h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text-main); }
-        .user-welcome p { color: var(--text-muted); font-size: 0.875rem; margin-top: 4px; }
+        .user-welcome h1 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            color: #111111;
+        }
 
-        .view-section { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .user-welcome p {
+            color: #6B7280;
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        /* ── View Sections ── */
+        .view-section { display: none; animation: bwFadeSlide 0.35s cubic-bezier(0.16,1,0.3,1) both; }
         .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        @keyframes bwFadeSlide {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
 
+        /* ── Dashboard Grid ── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.15rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* ── Cards ── */
         .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color); border-radius: 24px;
-            padding: 1.75rem; box-shadow: var(--shadow-card);
-            transition: all 0.25s ease;
-            position: relative; overflow: hidden;
+            background: #FFFFFF;
+            border: 1px solid #E5E5E3;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            transition: box-shadow 0.22s ease, transform 0.22s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-            background: var(--primary-mint);
-        }
+
         .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
-        }
-        .card h3 { font-size: 0.825rem; color: var(--text-muted); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
-        .card .value { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -1px; color: var(--text-main); }
-
-        .badge { display: inline-flex; align-items: center; gap: 6px; padding: 0.35rem 0.85rem; border-radius: 30px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
-        .badge.active { background: var(--mint-light); color: var(--text-dark-mint); }
-        .badge.danger { background: #fee2e2; color: #dc2626; }
-        .badge.warning { background: #fef3c7; color: #b45309; }
-        .badge.neutral { background: #e2e8f0; color: #475569; }
-
-        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 1.25rem; background: var(--card-bg); border-radius: 20px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: var(--shadow-card); }
-        th, td { padding: 1.1rem 1.5rem; text-align: left; }
-        th { background: #f8fafc; font-weight: 700; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); }
-        td { font-size: 0.92rem; border-bottom: 1px solid #f1f5f9; color: var(--text-main); font-weight: 500; }
-        tr:last-child td { border-bottom: none; }
-        tbody tr:hover { background: #f0fdf4; }
-
-        .btn {
-            background: linear-gradient(135deg, #36b37e 0%, #2ecc71 100%); 
-            color: white; border: none; padding: 0.75rem 1.5rem;
-            border-radius: 30px; cursor: pointer; font-weight: 700; font-size: 0.875rem;
-            transition: all 0.25s ease;
-            box-shadow: var(--shadow-btn); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-        }
-        .btn:hover:not(:disabled) { 
-            background: linear-gradient(135deg, #2e9b6d 0%, #27ae60 100%);
-            transform: translateY(-2px); 
-            box-shadow: 0 6px 20px rgba(54, 179, 126, 0.45); 
-        }
-        .btn:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
-        
-        .btn-outline { 
-            background: #ffffff; 
-            border: 1px solid var(--border-color); 
-            color: var(--text-main); 
-            box-shadow: none;
-            border-radius: 30px;
-        }
-        .btn-outline:hover { 
-            background: var(--mint-light); 
-            color: var(--text-dark-mint);
-            border-color: var(--primary-mint);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.09);
             transform: translateY(-2px);
         }
-        .btn-danger { 
-            background: #ef4444; 
-            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
-            border-radius: 30px;
-        }
-        .btn-danger:hover { 
-            background: #dc2626;
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45); 
+
+        /* Top accent strip — overrides the old green one */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: #E8453C;
         }
 
-        .form-group { margin-bottom: 1.4rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-main); font-size: 0.825rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+        .card h3 {
+            font-size: 0.72rem;
+            color: #6B7280;
+            margin-bottom: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 700;
+        }
+
+        .card .value {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            color: #111111;
+            margin-bottom: 0.35rem;
+        }
+
+        /* Dark metric card */
+        .card-dark {
+            background: #252525;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            transition: box-shadow 0.22s ease, transform 0.22s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-dark:hover {
+            box-shadow: 0 8px 28px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
+        }
+
+        .card-dark::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: #E8453C;
+        }
+
+        .card-dark h3 { color: rgba(255,255,255,0.4); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; margin-bottom: 0.6rem; }
+        .card-dark .value { color: #FFFFFF; font-size: 2rem; font-weight: 900; letter-spacing: -1px; }
+        .card-dark p { color: rgba(255,255,255,0.38); font-size: 0.8rem; }
+
+        /* Metric icon */
+        .metric-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.9rem;
+        }
+
+        .metric-icon.coral  { background: rgba(232,69,60,0.12); color: #E8453C; }
+        .metric-icon.green  { background: rgba(34,197,94,0.12);  color: #16A34A; }
+        .metric-icon.amber  { background: rgba(245,158,11,0.12); color: #B45309; }
+        .metric-icon.slate  { background: rgba(100,116,139,0.12);color: #475569; }
+        .card-dark .metric-icon { background: rgba(255,255,255,0.1); color: #fff; }
+
+        /* ── Quick Actions Card ── */
+        .actions-card {
+            background: #FFFFFF;
+            border: 1px solid #E5E5E3;
+            border-radius: 20px;
+            padding: 1.75rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            margin-top: 1.5rem;
+        }
+
+        .actions-card-header { margin-bottom: 1.25rem; }
+        .actions-card-header h3 { font-size: 1rem; font-weight: 800; color: #111111; letter-spacing: -0.3px; }
+        .actions-card-header p  { font-size: 0.83rem; color: #6B7280; margin-top: 3px; }
+
+        .actions-row { display: flex; gap: 0.85rem; flex-wrap: wrap; }
+
+        /* ── Section header ── */
+        .section-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            gap: 1rem;
+        }
+
+        .section-header h2 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.4px; color: #111111; }
+        .section-header p  { font-size: 0.82rem; color: #6B7280; margin-top: 2px; }
+
+        /* ── Badges ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.26rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.71rem;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .badge.active   { background: rgba(34,197,94,0.12); color: #16A34A; }
+        .badge.danger   { background: rgba(239,68,68,0.12); color: #DC2626; }
+        .badge.warning  { background: rgba(245,158,11,0.12);color: #B45309; }
+        .badge.neutral  { background: #F3F4F6;               color: #6B7280; }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #FFFFFF;
+            border: 1px solid #E5E5E3;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            margin-top: 0;
+        }
+
+        th {
+            background: #F9F9F8;
+            font-weight: 700;
+            color: #6B7280;
+            font-size: 0.73rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #E5E5E3;
+        }
+
+        td {
+            padding: 0.9rem 1.25rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid #F3F3F1;
+            color: #111111;
+            font-weight: 500;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tbody tr { transition: background 0.14s ease; }
+        tbody tr:hover { background: #FAFAF9; }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 0.65rem 1.3rem;
+            border-radius: 999px;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            background: #E8453C;
+            color: #FFFFFF;
+            box-shadow: 0 2px 10px rgba(232,69,60,0.28);
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #D03530;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(232,69,60,0.38);
+        }
+
+        .btn:disabled {
+            background: #D1D5DB !important;
+            color: #9CA3AF !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        .btn.btn-outline {
+            background: #FFFFFF;
+            border: 1.5px solid #E5E5E3;
+            color: #111111;
+            box-shadow: none;
+        }
+
+        .btn.btn-outline:hover {
+            background: #F9F9F8;
+            border-color: #C8C8C5;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .btn.btn-danger {
+            background: #EF4444;
+            box-shadow: 0 2px 10px rgba(239,68,68,0.28);
+        }
+
+        .btn.btn-danger:hover {
+            background: #DC2626;
+            box-shadow: 0 6px 18px rgba(239,68,68,0.38);
+        }
+
+        /* ── Form Controls ── */
+        .form-group { margin-bottom: 1.2rem; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.45rem;
+            color: #111111;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
         .form-control {
-            width: 100%; padding: 13px 16px; background: #f8fafc;
-            border: 1px solid var(--border-color); border-radius: 14px; color: var(--text-main); font-size: 0.95rem; font-family: 'Inter', sans-serif;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #FAFAF8;
+            border: 1.5px solid #E8E8E6;
+            border-radius: 12px;
+            color: #111111;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #E8453C;
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(232,69,60,0.12);
+        }
+
+        .form-control:disabled {
+            background: #F3F4F6;
+            color: #9CA3AF;
+            cursor: not-allowed;
+        }
+
+        /* ── Pricing Grid ── */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.15rem;
+            margin-top: 1rem;
+        }
+
+        .pricing-card {
+            background: #FFFFFF;
+            border: 1.5px solid #E5E5E3;
+            border-radius: 20px;
+            padding: 1.75rem;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: #E5E5E3;
+            transition: background 0.25s ease;
+        }
+
+        .pricing-card:hover {
+            border-color: #E8453C;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+        }
+
+        .pricing-card:hover::before { background: #E8453C; }
+
+        .pricing-card h4 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: -0.2px;
+            margin-bottom: 0.35rem;
+            color: #111111;
+        }
+
+        .pricing-card .price {
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: #111111;
+            letter-spacing: -1.5px;
+            margin: 0.9rem 0 0.25rem;
+            line-height: 1;
+        }
+
+        .features-list {
+            font-size: 0.85rem;
+            color: #6B7280;
+            text-align: left;
+            margin: 1.1rem 0;
+            line-height: 2;
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 10, 0.52);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
             transition: all 0.25s ease;
         }
-        .form-control:focus { outline: none; border-color: var(--primary-mint); background: #ffffff; box-shadow: 0 0 0 4px rgba(54, 179, 126, 0.15); }
 
-        /* Dynamic Plans Layout */
-        .pricing-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.75rem; margin-top: 1.5rem;
-        }
-        .pricing-card {
-            background: var(--card-bg); border: 1px solid var(--border-color);
-            border-radius: 24px; padding: 2.25rem; text-align: center;
-            display: flex; flex-direction: column; justify-content: space-between;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative; overflow: hidden;
-            box-shadow: var(--shadow-card);
-        }
-        .pricing-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-            background: linear-gradient(90deg, #36b37e, #2ecc71);
-        }
-        .pricing-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary-mint);
-            box-shadow: 0 20px 40px rgba(54, 179, 126, 0.12);
-        }
-        .pricing-card h4 { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 0.5rem; color: var(--text-main); }
-        .pricing-card .price { font-size: 2.5rem; font-weight: 800; margin: 1.25rem 0; color: var(--primary-mint); letter-spacing: -1px; }
-        .features-list { font-size: 0.9rem; color: var(--text-muted); text-align: left; margin: 20px 0; line-height: 1.8; }
-
-        /* --- NEW: Payment Modal Styles --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(8px);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.3s ease;
-        }
         .modal-overlay.active { opacity: 1; visibility: visible; }
+
         .modal-content {
-            background: #ffffff; border: 1px solid var(--border-color);
-            width: 100%; max-width: 420px; padding: 40px; border-radius: 28px; position: relative;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-            transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            background: #FFFFFF;
+            border: 1px solid #E5E5E3;
+            width: 100%;
+            max-width: 440px;
+            padding: 2.25rem;
+            border-radius: 26px;
+            position: relative;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+            transform: scale(0.95) translateY(16px);
+            transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
         }
+
         .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+
         .modal-close {
-            position: absolute; top: 20px; right: 24px; background: #f1f5f9; border: none;
-            color: var(--text-muted); font-size: 1.4rem; width: 36px; height: 36px; border-radius: 50%;
-            cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+            position: absolute;
+            top: 1.1rem;
+            right: 1.25rem;
+            width: 32px;
+            height: 32px;
+            background: #F3F3F1;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6B7280;
+            font-size: 1.15rem;
+            transition: all 0.15s ease;
         }
-        .modal-close:hover { background: #e2e8f0; color: var(--text-main); }
+
+        .modal-close:hover { background: #E8E8E6; color: #111111; }
+
+        /* ── Hidden (used by JS) ── */
+        .hidden { display: none !important; }
+
+        /* ── Status dot indicator ── */
+        .status-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-dot.green  { background: #22C55E; box-shadow: 0 0 0 3px rgba(34,197,94,0.18); }
+        .status-dot.red    { background: #EF4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.18); }
+        .status-dot.amber  { background: #F59E0B; box-shadow: 0 0 0 3px rgba(245,158,11,0.18); }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            aside { transform: translateX(-100%); }
+            aside.open { transform: translateX(0); }
+            main { margin-left: 0; padding: 1.25rem; padding-top: 4.5rem; }
+            .mobile-menu-btn { display: flex; }
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .header-bar { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+            .actions-row { flex-direction: column; }
+            .actions-row .btn { width: 100%; }
+        }
     </style>
 </head>
 <body>
-    <div class="overlay"></div>
-
     <div class="app-container">
+
+        <!-- Mobile menu button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleSidebar()">
+            <i data-lucide="menu" style="width:18px;height:18px;"></i>
+        </button>
+
+        <!-- Sidebar overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
         <!-- Sidebar Navigation -->
-        <aside>
+        <aside id="mainSidebar">
             <div>
                 <div class="logo-area">
-                    <h2>BillWise</h2>
+                    <div class="logo-mark">BW</div>
+                    <div class="logo-text-wrap">
+                        <span class="logo-title">BillWise</span>
+                        <span class="logo-subtitle">USER</span>
+                    </div>
                 </div>
+
+                <span class="nav-label">Main</span>
+
                 <ul class="nav-links" id="navigationList">
-                    <li class="active"><a href="#" data-target="home-view">📊 <span>Dashboard</span></a></li>
-                    <li><a href="#" data-target="plans-view">💳 <span>Plans</span></a></li>
-                    <li><a href="#" data-target="subscription-view">📦 <span>Subscription</span></a></li>
-                    <li><a href="#" data-target="billing-view">📄 <span>Billing</span></a></li>
-                    <li><a href="#" data-target="profile-view">👤 <span>Profile</span></a></li>
+                    <li class="active">
+                        <a href="#" data-target="home-view">
+                            <span class="nav-icon"><i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i></span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-target="plans-view">
+                            <span class="nav-icon"><i data-lucide="credit-card" style="width:16px;height:16px;"></i></span>
+                            <span>Plans</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-target="subscription-view">
+                            <span class="nav-icon"><i data-lucide="package" style="width:16px;height:16px;"></i></span>
+                            <span>Subscription</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-target="billing-view">
+                            <span class="nav-icon"><i data-lucide="file-text" style="width:16px;height:16px;"></i></span>
+                            <span>Billing</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-target="profile-view">
+                            <span class="nav-icon"><i data-lucide="user" style="width:16px;height:16px;"></i></span>
+                            <span>Profile</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
-            
-            <div>
-                <ul class="nav-links" style="margin-top: 1rem;">
-                    <li><a href="#" onclick="logout()">🚪 <span>Logout</span></a></li>
+
+            <div class="sidebar-bottom">
+                <ul class="nav-links">
+                    <li>
+                        <a href="#" onclick="logout()">
+                            <span class="nav-icon"><i data-lucide="log-out" style="width:16px;height:16px;"></i></span>
+                            <span>Logout</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </aside>
 
+        <!-- Decorative animated background (matches admin finance-ledger theme) -->
+        <div class="cust-bg" aria-hidden="true">
+            <svg viewBox="0 0 820 560" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                    <radialGradient id="custGlow" cx="55%" cy="25%" r="52%">
+                        <stop offset="0%"   stop-color="#E8453C" stop-opacity="0.08"/>
+                        <stop offset="60%"  stop-color="#E8453C" stop-opacity="0.02"/>
+                        <stop offset="100%" stop-color="#E8453C" stop-opacity="0"/>
+                    </radialGradient>
+                    <radialGradient id="custGlow2" cx="85%" cy="75%" r="38%">
+                        <stop offset="0%"   stop-color="#22C55E" stop-opacity="0.06"/>
+                        <stop offset="100%" stop-color="#22C55E" stop-opacity="0"/>
+                    </radialGradient>
+                </defs>
+                <rect width="820" height="560" fill="url(#custGlow)"/>
+                <rect width="820" height="560" fill="url(#custGlow2)"/>
+                <!-- Finance ledger grid -->
+                <g stroke="#E8453C" stroke-opacity="0.045" stroke-width="0.5">
+                    <line x1="0" y1="70"  x2="820" y2="70"/>
+                    <line x1="0" y1="140" x2="820" y2="140"/>
+                    <line x1="0" y1="210" x2="820" y2="210"/>
+                    <line x1="0" y1="280" x2="820" y2="280"/>
+                    <line x1="0" y1="350" x2="820" y2="350"/>
+                    <line x1="0" y1="420" x2="820" y2="420"/>
+                    <line x1="0" y1="490" x2="820" y2="490"/>
+                    <line x1="82"  y1="0" x2="82"  y2="560"/>
+                    <line x1="164" y1="0" x2="164" y2="560"/>
+                    <line x1="246" y1="0" x2="246" y2="560"/>
+                    <line x1="328" y1="0" x2="328" y2="560"/>
+                    <line x1="410" y1="0" x2="410" y2="560"/>
+                    <line x1="492" y1="0" x2="492" y2="560"/>
+                    <line x1="574" y1="0" x2="574" y2="560"/>
+                    <line x1="656" y1="0" x2="656" y2="560"/>
+                    <line x1="738" y1="0" x2="738" y2="560"/>
+                </g>
+                <!-- Abstract billing flow arcs -->
+                <g fill="none" stroke="#E8453C" stroke-opacity="0.08" stroke-width="1">
+                    <path d="M200 560 Q360 300 560 180" stroke-dasharray="4,8"/>
+                    <path d="M100 560 Q320 340 620 140" stroke-dasharray="3,10"/>
+                    <path d="M350 560 Q450 380 620 260" stroke-dasharray="4,8"/>
+                </g>
+                <!-- Connection nodes -->
+                <g class="bg-node">
+                    <circle cx="560" cy="180" r="5" fill="#E8453C" fill-opacity="0.55"/>
+                    <circle cx="560" cy="180" r="11" fill="#E8453C" fill-opacity="0.1"/>
+                </g>
+                <g class="bg-node">
+                    <circle cx="420" cy="270" r="4" fill="#E8453C" fill-opacity="0.45"/>
+                    <circle cx="420" cy="270" r="9"  fill="#E8453C" fill-opacity="0.08"/>
+                </g>
+                <g class="bg-node">
+                    <circle cx="620" cy="140" r="3.5" fill="#22C55E" fill-opacity="0.5"/>
+                    <circle cx="620" cy="140" r="8"   fill="#22C55E" fill-opacity="0.09"/>
+                </g>
+                <g class="bg-node">
+                    <circle cx="310" cy="340" r="3"   fill="#E8453C" fill-opacity="0.38"/>
+                    <circle cx="310" cy="340" r="7"   fill="#E8453C" fill-opacity="0.07"/>
+                </g>
+                <g class="bg-node">
+                    <circle cx="700" cy="220" r="3"   fill="#F59E0B" fill-opacity="0.4"/>
+                    <circle cx="700" cy="220" r="7"   fill="#F59E0B" fill-opacity="0.07"/>
+                </g>
+                <!-- Connection lines between nodes -->
+                <g stroke="#E8453C" stroke-opacity="0.1" stroke-width="0.6" stroke-dasharray="3,6">
+                    <line x1="560" y1="180" x2="420" y2="270"/>
+                    <line x1="560" y1="180" x2="620" y2="140"/>
+                    <line x1="420" y1="270" x2="310" y2="340"/>
+                    <line x1="620" y1="140" x2="700" y2="220"/>
+                </g>
+                <!-- Floating label text -->
+                <g font-family="Inter,sans-serif" fill="#E8453C" fill-opacity="0.3" font-size="8.5" font-weight="700">
+                    <text x="530" y="172">BILLING HUB</text>
+                    <text x="630" y="134">INVOICED</text>
+                    <text x="270" y="348">DUE SOON</text>
+                </g>
+            </svg>
+        </div>
+
         <!-- Main Workspace -->
         <main>
+            <div class="cust-content">
+            <!-- Top bar -->
             <header class="header-bar">
                 <div class="user-welcome">
                     <h1 id="welcomeHeader">Welcome to BillWise!</h1>
-                    <p>Manage your account settings, subscription tiers, and invoices.</p>
+                    <p>Manage your subscriptions, plans, and invoices.</p>
                 </div>
                 <div>
                     <span class="badge neutral" id="headerStatusBadge">Checking Status...</span>
                 </div>
             </header>
 
-            <!-- 1. Dashboard / Home View -->
+            <!-- ── 1. Dashboard / Home View ── -->
             <section id="home-view" class="view-section active">
+
+                <!-- Metric cards row — card-anim class adds staggered entrance -->
                 <div class="dashboard-grid">
-                    <div class="card">
+                    <div class="card-dark card-anim">
+                        <div class="metric-icon" style="background:rgba(232,69,60,0.2);color:#E8453C;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:0.9rem;">
+                            <i data-lucide="layers" style="width:16px;height:16px;"></i>
+                        </div>
                         <h3>Current Plan</h3>
-                        <div class="value" id="dashPlanName">Free Tier</div>
-                        <p style="color: var(--text-muted); font-size: 0.85rem;" id="dashPlanSubtext">Upgrade anytime</p>
+                        <div class="value" id="dashPlanName"><span class="shimmer" style="width:140px;height:32px;"></span></div>
+                        <p id="dashPlanSubtext" style="font-size:0.8rem;margin-top:4px;"><span class="shimmer" style="width:90px;height:14px;"></span></p>
+                    </div>
+
+                    <div class="card card-anim">
+                        <div class="metric-icon green">
+                            <i data-lucide="activity" style="width:16px;height:16px;"></i>
+                        </div>
+                        <h3>Subscription Status</h3>
+                        <div class="value" style="font-size:1.5rem;letter-spacing:-0.5px;">Active</div>
+                        <p style="color:#6B7280;font-size:0.8rem;margin-top:4px;">Billing up to date</p>
+                        <!-- Animated progress bar -->
+                        <div class="sub-progress-track">
+                            <div class="sub-progress-fill" style="--target-w:100%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="card card-anim">
+                        <div class="metric-icon amber">
+                            <i data-lucide="bell" style="width:16px;height:16px;"></i>
+                        </div>
+                        <h3>Next Action</h3>
+                        <div class="value" style="font-size:1.5rem;letter-spacing:-0.5px;">View Plans</div>
+                        <p style="color:#6B7280;font-size:0.8rem;margin-top:4px;">Explore upgrades</p>
                     </div>
                 </div>
 
-                <div class="card" style="margin-top: 2rem;">
-                    <h3 style="margin-bottom: 0.75rem; font-size: 1.1rem; color: var(--text-main); text-transform: none;">Subscription Quick Actions</h3>
-                    <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">Review your options, upgrade tiers, or check past billing data easily.</p>
-                    <button class="btn" onclick="switchView('plans-view')">View Available Plans</button>
-                    <button class="btn btn-outline" style="margin-left: 10px;" onclick="switchView('subscription-view')">Manage Subscription</button>
+                <!-- Quick Actions -->
+                <div class="actions-card">
+                    <div class="actions-card-header">
+                        <h3>Quick Actions</h3>
+                        <p>Jump directly to what you need — upgrade plans, manage subscription, or review invoices.</p>
+                    </div>
+                    <div class="actions-row">
+                        <button class="btn" onclick="switchView('plans-view')">
+                            <i data-lucide="credit-card" style="width:15px;height:15px;"></i>
+                            View Plans
+                        </button>
+                        <button class="btn btn-outline" onclick="switchView('subscription-view')">
+                            <i data-lucide="package" style="width:15px;height:15px;"></i>
+                            Manage Subscription
+                        </button>
+                        <button class="btn btn-outline" onclick="switchView('billing-view')">
+                            <i data-lucide="file-text" style="width:15px;height:15px;"></i>
+                            Invoice History
+                        </button>
+                    </div>
                 </div>
             </section>
 
-            <!-- 2. Plans View (Dynamic Data from Backend) -->
+            <!-- ── 2. Plans View ── -->
             <section id="plans-view" class="view-section">
-                <div style="margin-bottom: 1.5rem;">
-                    <h2 style="font-size: 1.5rem; font-weight: 800;">View Available Plans</h2>
-                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 4px;">Choose a plan that suits your personal or business goals.</p>
+                <div class="section-header">
+                    <div>
+                        <h2>Available Plans</h2>
+                        <p>Choose a plan that suits your personal or business goals.</p>
+                    </div>
                 </div>
-                
-                <div class="pricing-grid" id="customerPlansGrid">
-                    <p style="color: var(--text-muted);">Loading plans from server...</p>
-                </div>
-            </section>
 
-            <!-- 3. Subscription Details View -->
-            <section id="subscription-view" class="view-section">
-                <div class="card">
-                    <h3 style="margin-bottom: 1.25rem; font-size: 1.1rem; color: var(--text-main); text-transform: none;">My Subscription Details</h3>
-                    <div id="subInfoContent">
-                        <p style="color: var(--text-muted); font-size: 0.9rem;">Fetching subscription data...</p>
+                <div class="pricing-grid" id="customerPlansGrid">
+                    <div style="display:flex;align-items:center;gap:10px;color:#6B7280;font-size:0.875rem;padding:2rem 0;">
+                        <i data-lucide="loader" style="width:16px;height:16px;animation:spin 1s linear infinite;"></i>
+                        Loading plans from server...
                     </div>
                 </div>
             </section>
 
-            <!-- 4. Billing View (Dynamic Invoices) -->
-            <section id="billing-view" class="view-section">
-                <div style="margin-bottom: 1.5rem;">
-                    <h2 style="font-size: 1.5rem; font-weight: 800;">Invoice History</h2>
-                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 4px;">Review and manage your past billing statements.</p>
+            <!-- ── 3. Subscription Details View ── -->
+            <section id="subscription-view" class="view-section">
+                <div class="section-header">
+                    <div>
+                        <h2>My Subscription</h2>
+                        <p>Current plan details and management options.</p>
+                    </div>
                 </div>
+                <div class="card" style="max-width:640px;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;">
+                        <div class="metric-icon coral" style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i data-lucide="package" style="width:16px;height:16px;"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-size:1rem;color:#111111;text-transform:none;letter-spacing:0;font-weight:800;margin-bottom:0;">My Subscription Details</h3>
+                            <p style="font-size:0.8rem;color:#6B7280;margin-top:2px;">Manage your active plan</p>
+                        </div>
+                    </div>
+                    <div id="subInfoContent">
+                        <div style="display:flex;align-items:center;gap:10px;color:#6B7280;font-size:0.875rem;padding:1rem 0;">
+                            <i data-lucide="loader" style="width:16px;height:16px;animation:spin 1s linear infinite;"></i>
+                            Fetching subscription data...
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── 4. Billing View ── -->
+            <section id="billing-view" class="view-section">
+                <div class="section-header">
+                    <div>
+                        <h2>Invoice History</h2>
+                        <p>Review and manage your past billing statements.</p>
+                    </div>
+                </div>
+
+                <!-- Invoice sparkline summary bar -->
+                <div class="invoice-spark-wrap will-reveal" id="invoiceSparkWrap" style="display:none;">
+                    <div class="invoice-spark-meta">
+                        <div class="spark-label">Total Billed</div>
+                        <div class="spark-value" id="invSparkTotal">—</div>
+                        <div class="spark-sub" id="invSparkSub">Loading invoice trend...</div>
+                    </div>
+                    <canvas class="invoice-spark-canvas" id="invoiceSparkline"></canvas>
+                </div>
+
                 <table>
                     <thead>
                         <tr>
@@ -367,19 +972,42 @@
                             <th>Amount</th>
                             <th>Due Date</th>
                             <th>Status</th>
-                            <th>Action</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="invoicesTableBody">
-                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading invoices...</td></tr>
+                        <tr>
+                            <td colspan="5" style="text-align:center;color:#6B7280;padding:2rem;">
+                                <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                                    <i data-lucide="loader" style="width:15px;height:15px;animation:spin 1s linear infinite;"></i>
+                                    Loading invoices...
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </section>
 
-            <!-- 5. Profile View -->
+            <!-- ── 5. Profile View ── -->
             <section id="profile-view" class="view-section">
-                <div class="card" style="max-width: 600px;">
-                    <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--text-main); text-transform: none;">View / Edit Profile</h3>
+                <div class="section-header">
+                    <div>
+                        <h2>My Profile</h2>
+                        <p>View and update your account details.</p>
+                    </div>
+                </div>
+
+                <div class="card" style="max-width:580px;">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:1px solid #F0F0EE;">
+                        <div style="width:46px;height:46px;border-radius:12px;background:#E8453C;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.1rem;flex-shrink:0;">
+                            U
+                        </div>
+                        <div>
+                            <h3 style="font-size:1rem;color:#111111;text-transform:none;letter-spacing:0;font-weight:800;margin-bottom:0;">Account Settings</h3>
+                            <p style="font-size:0.8rem;color:#6B7280;margin-top:2px;">Update your personal information</p>
+                        </div>
+                    </div>
+
                     <form onsubmit="saveProfile(event)">
                         <div class="form-group">
                             <label>Full Name</label>
@@ -394,22 +1022,34 @@
                             <input type="email" class="form-control" id="profileEmail" disabled>
                         </div>
                         <div class="form-group">
-                            <label>New Password (Optional)</label>
+                            <label>New Password <span style="color:#9CA3AF;font-weight:500;text-transform:none;letter-spacing:0;">(optional)</span></label>
                             <input type="password" class="form-control" id="profilePassword" placeholder="Leave blank to keep current password">
                         </div>
-                        <button type="submit" class="btn" style="margin-top: 0.5rem;">Save Profile</button>
+                        <button type="submit" class="btn" style="margin-top:0.25rem;">
+                            <i data-lucide="save" style="width:15px;height:15px;"></i>
+                            Save Profile
+                        </button>
                     </form>
                 </div>
             </section>
+
+            </div><!-- /cust-content -->
         </main>
     </div>
 
-    <!-- --- NEW: THE CHECKOUT MODAL --- -->
+    <!-- ── THE CHECKOUT MODAL ── -->
     <div class="modal-overlay" id="paymentModal">
         <div class="modal-content">
             <button class="modal-close" onclick="closePaymentModal()">×</button>
-            <h2 style="margin-bottom: 6px; font-size: 1.4rem; font-weight: 800;">Complete Payment</h2>
-            <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.9rem;" id="paymentModalDesc">Invoice #INV-XYZ • $0.00</p>
+
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+                <div style="width:36px;height:36px;border-radius:10px;background:rgba(232,69,60,0.12);color:#E8453C;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i data-lucide="credit-card" style="width:17px;height:17px;"></i>
+                </div>
+                <h2 style="font-size:1.25rem;font-weight:900;letter-spacing:-0.4px;color:#111111;">Complete Payment</h2>
+            </div>
+
+            <p style="color:#6B7280;margin-bottom:1.5rem;font-size:0.875rem;padding-left:46px;" id="paymentModalDesc">Invoice #INV-XYZ • $0.00</p>
 
             <form id="simulatedPaymentForm">
                 <div class="form-group">
@@ -420,25 +1060,246 @@
                     <label>Card Number</label>
                     <input type="text" class="form-control" placeholder="•••• •••• •••• 4242" required maxlength="19">
                 </div>
-                <div style="display: flex; gap: 15px; margin-bottom: 1.4rem;">
-                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                <div style="display:flex;gap:1rem;margin-bottom:1.2rem;">
+                    <div class="form-group" style="flex:1;margin-bottom:0;">
                         <label>Expiry (MM/YY)</label>
                         <input type="text" class="form-control" placeholder="12/25" required maxlength="5">
                     </div>
-                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <div class="form-group" style="flex:1;margin-bottom:0;">
                         <label>CVC</label>
                         <input type="text" class="form-control" placeholder="123" required maxlength="4">
                     </div>
                 </div>
-                <button type="submit" class="btn" style="width: 100%; justify-content: center; padding: 16px; font-size: 1rem;" id="confirmPaymentBtn">Pay Now</button>
-                <p style="text-align: center; font-size: 0.75rem; color: var(--text-dim); margin-top: 16px;">
-                    🔒 Secured by Mock Gateway 256-bit Encryption
+                <button type="submit" class="btn" style="width:100%;padding:0.85rem;font-size:0.95rem;" id="confirmPaymentBtn">Pay Now</button>
+                <p style="text-align:center;font-size:0.73rem;color:#9CA3AF;margin-top:0.9rem;display:flex;align-items:center;justify-content:center;gap:5px;">
+                    <i data-lucide="shield-check" style="width:13px;height:13px;"></i>
+                    Secured by Mock Gateway 256-bit Encryption
                 </p>
             </form>
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- Spinner CSS + Init -->
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ══════════════════════════════════════
+           ANIMATION SYSTEM
+        ══════════════════════════════════════ */
+
+        /* Page-level decorative background */
+        .cust-bg {
+            position: fixed;
+            top: 0; right: 0;
+            width: 62%;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .cust-bg svg { width: 100%; height: 100%; }
+
+        /* All main content sits above the bg */
+        .cust-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Pulsing location dots */
+        @keyframes nodePulse {
+            0%,100% { opacity: 0.4; transform: scale(1); }
+            50%      { opacity: 0.9; transform: scale(1.5); }
+        }
+        .bg-node { animation: nodePulse 3.2s ease-in-out infinite; }
+        .bg-node:nth-child(2) { animation-delay: 0.8s; }
+        .bg-node:nth-child(3) { animation-delay: 1.6s; }
+        .bg-node:nth-child(4) { animation-delay: 2.4s; }
+        .bg-node:nth-child(5) { animation-delay: 1.1s; }
+
+        /* Shimmer skeleton for loading states */
+        @keyframes shimmerSlide {
+            0%   { background-position: -400px 0; }
+            100% { background-position: 400px 0; }
+        }
+        .shimmer {
+            background: linear-gradient(90deg, #EBEBEA 0%, #F5F4F2 45%, #EBEBEA 90%);
+            background-size: 400px 100%;
+            animation: shimmerSlide 1.5s ease infinite;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        /* Staggered card entrance */
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(22px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .card-anim {
+            opacity: 0;
+            animation: cardEntrance 0.55s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+        .card-anim:nth-child(1) { animation-delay: 0.06s; }
+        .card-anim:nth-child(2) { animation-delay: 0.14s; }
+        .card-anim:nth-child(3) { animation-delay: 0.22s; }
+        .card-anim:nth-child(4) { animation-delay: 0.30s; }
+
+        /* Metric icon float */
+        @keyframes iconFloat {
+            0%,100% { transform: translateY(0); }
+            50%     { transform: translateY(-4px); }
+        }
+        .metric-icon { animation: iconFloat 3.5s ease-in-out infinite; }
+        .card-anim:nth-child(2) .metric-icon { animation-delay: 0.6s; }
+        .card-anim:nth-child(3) .metric-icon { animation-delay: 1.2s; }
+
+        /* Glow pulse on dark card */
+        @keyframes darkCardGlow {
+            0%,100% { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+            50%     { box-shadow: 0 8px 32px rgba(232,69,60,0.18), 0 2px 8px rgba(0,0,0,0.12); }
+        }
+        .card-dark.card-anim { animation: cardEntrance 0.55s cubic-bezier(0.16,1,0.3,1) forwards, darkCardGlow 4s ease-in-out infinite; }
+        .card-dark:hover { animation: cardEntrance 0.55s cubic-bezier(0.16,1,0.3,1) forwards; }
+
+        /* Header-bar slide in from top */
+        @keyframes topbarIn {
+            from { opacity: 0; transform: translateY(-12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .header-bar { animation: topbarIn 0.5s cubic-bezier(0.16,1,0.3,1) both; }
+
+        /* Sidebar nav items stagger */
+        @keyframes navItemIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        #navigationList li {
+            opacity: 0;
+            animation: navItemIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+        #navigationList li:nth-child(1) { animation-delay: 0.08s; }
+        #navigationList li:nth-child(2) { animation-delay: 0.16s; }
+        #navigationList li:nth-child(3) { animation-delay: 0.24s; }
+        #navigationList li:nth-child(4) { animation-delay: 0.32s; }
+        #navigationList li:nth-child(5) { animation-delay: 0.40s; }
+
+        /* Pricing card stagger entrance */
+        @keyframes pricingIn {
+            from { opacity: 0; transform: translateY(28px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .pricing-card {
+            opacity: 0;
+            animation: pricingIn 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+        .pricing-card:nth-child(1) { animation-delay: 0.05s; }
+        .pricing-card:nth-child(2) { animation-delay: 0.13s; }
+        .pricing-card:nth-child(3) { animation-delay: 0.21s; }
+        .pricing-card:nth-child(4) { animation-delay: 0.29s; }
+
+        /* Button ripple */
+        .btn { overflow: hidden; position: relative; }
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: var(--ripple-y, 50%);
+            left: var(--ripple-x, 50%);
+            width: 0; height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.35);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            transition: width 0.45s ease-out, height 0.45s ease-out, opacity 0.6s ease-out;
+            opacity: 1;
+        }
+        .btn.ripple::after {
+            width: 300px; height: 300px;
+            opacity: 0;
+        }
+
+        /* Row table entrance */
+        @keyframes rowIn {
+            from { opacity: 0; transform: translateX(-8px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        tbody tr {
+            animation: rowIn 0.35s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        tbody tr:nth-child(1)  { animation-delay: 0.03s; }
+        tbody tr:nth-child(2)  { animation-delay: 0.07s; }
+        tbody tr:nth-child(3)  { animation-delay: 0.11s; }
+        tbody tr:nth-child(4)  { animation-delay: 0.15s; }
+        tbody tr:nth-child(5)  { animation-delay: 0.19s; }
+        tbody tr:nth-child(6)  { animation-delay: 0.23s; }
+        tbody tr:nth-child(7)  { animation-delay: 0.27s; }
+        tbody tr:nth-child(8)  { animation-delay: 0.31s; }
+
+        /* Floating orbital ring behind logo mark */
+        @keyframes logoRing {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        .logo-area { position: relative; }
+        .logo-mark {
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        .logo-mark:hover { transform: scale(1.1) rotate(-5deg); }
+
+        /* Section reveal when switching views */
+        .view-section.active {
+            animation: bwFadeSlide 0.38s cubic-bezier(0.16,1,0.3,1) both !important;
+        }
+
+        /* Invoice sparkline area */
+        .invoice-spark-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: #F9F9F8;
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid #EFEFED;
+        }
+        .invoice-spark-meta { flex: 1; }
+        .invoice-spark-meta .spark-label {
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.8px; color: #9CA3AF; margin-bottom: 0.25rem;
+        }
+        .invoice-spark-meta .spark-value {
+            font-size: 1.6rem; font-weight: 900; letter-spacing: -0.8px; color: #111;
+        }
+        .invoice-spark-meta .spark-sub {
+            font-size: 0.76rem; color: #6B7280; margin-top: 2px;
+        }
+        .invoice-spark-canvas { width: 120px; height: 48px; flex-shrink: 0; }
+
+        /* Active subscription progress bar */
+        @keyframes progressFill {
+            from { width: 0%; }
+            to   { width: var(--target-w, 70%); }
+        }
+        .sub-progress-track {
+            height: 5px; background: #F0F0EE; border-radius: 999px; overflow: hidden;
+            margin-top: 0.75rem;
+        }
+        .sub-progress-fill {
+            height: 100%; background: #22C55E; border-radius: 999px;
+            animation: progressFill 1.2s cubic-bezier(0.16,1,0.3,1) 0.4s both;
+        }
+
+        /* Scroll-reveal for sections (JS adds .reveal class) */
+        .will-reveal {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16,1,0.3,1);
+        }
+        .will-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+
+    <!-- JAVASCRIPT LOGIC (100% PRESERVED) -->
     <script>
         const API_BASE_URL = "http://127.0.0.1:8000";
         let myCurrentSubscriptionId = null;
@@ -460,6 +1321,9 @@
 
                 document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
                 document.getElementById(targetId).classList.add('active');
+
+                // Close mobile sidebar on nav
+                closeSidebar();
             });
         });
 
@@ -470,6 +1334,19 @@
                 if(l.getAttribute('data-target') === targetId) l.parentElement.classList.add('active');
                 else l.parentElement.classList.remove('active');
             });
+        }
+
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        function closeSidebar() {
+            document.getElementById('mainSidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('open');
         }
 
         // Authentication & Data Loading
@@ -485,6 +1362,9 @@
             fetchCustomerPlans(); 
             fetchMySubscription();
             fetchMyInvoices();
+
+            // Init Lucide icons
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         };
 
         function logout() {
@@ -555,7 +1435,7 @@
                 const plans = await response.json();
                 grid.innerHTML = "";
                 if (plans.length === 0) {
-                    grid.innerHTML = "<p style='color: var(--text-muted);'>No active plans available at the moment.</p>";
+                    grid.innerHTML = `<div style="color:#6B7280;padding:2rem 0;font-size:0.875rem;">No active plans available at the moment.</div>`;
                     return;
                 }
                 plans.forEach(plan => {
@@ -564,14 +1444,15 @@
                         <div class="pricing-card">
                             <div>
                                 <h4>${plan.name}</h4>
-                                <div class="price">$${plan.price}<span style="font-size: 0.9rem; font-weight: normal; color: var(--text-muted);">/mo</span></div>
+                                <div class="price">$${plan.price}<span style="font-size:0.9rem;font-weight:500;color:#6B7280;letter-spacing:0;">/mo</span></div>
                                 <div class="features-list">✓ ${features}</div>
                             </div>
-                            <button class="btn btn-outline" style="margin-top: 1.5rem;" onclick="subscribePlan('${plan.id}', '${plan.name}')">Select Plan</button>
+                            <button class="btn btn-outline" style="margin-top:1.25rem;width:100%;" onclick="subscribePlan('${plan.id}', '${plan.name}')">Select Plan</button>
                         </div>
                     `;
                 });
-            } catch (error) { grid.innerHTML = `<p style="color: var(--danger);">Error fetching plans.</p>`; }
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } catch (error) { grid.innerHTML = `<p style="color:#EF4444;">Error fetching plans.</p>`; }
         }
 
         // 2. READ SUBSCRIPTION (GET)
@@ -589,7 +1470,7 @@
                     dashPlanSubtext.innerText = "Upgrade anytime";
                     headerBadge.innerText = "FREE TIER";
                     headerBadge.className = "badge neutral";
-                    subInfoContent.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem;">You are not currently subscribed to a premium plan. Visit the Plans tab to upgrade.</p>`;
+                    subInfoContent.innerHTML = `<p style="color:#6B7280;font-size:0.875rem;">You are not currently subscribed to a premium plan. Visit the Plans tab to upgrade.</p>`;
                     return;
                 }
 
@@ -619,10 +1500,21 @@
                 }
 
                 subInfoContent.innerHTML = `
-                    <p style="margin-bottom: 8px;"><strong>Status:</strong> <span style="color: var(--text-dark-mint); font-weight: 700;">${sub.status.toUpperCase()}</span></p>
-                    <p style="margin-bottom: 8px;"><strong>Renewal Date:</strong> ${new Date(sub.current_period_end).toLocaleDateString()}</p>
-                    <p style="margin-bottom: 24px;"><strong>Plan ID:</strong> ${sub.plan_id}</p>
-                    <div style="display: flex; gap: 12px;">${actionButtons}</div>
+                    <div style="display:grid;gap:0.75rem;margin-bottom:1.5rem;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:#F9F9F8;border-radius:12px;">
+                            <span style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#6B7280;">Status</span>
+                            <span style="font-weight:700;color:#16A34A;">${sub.status.toUpperCase()}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:#F9F9F8;border-radius:12px;">
+                            <span style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#6B7280;">Renewal Date</span>
+                            <span style="font-weight:600;color:#111111;">${new Date(sub.current_period_end).toLocaleDateString()}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:#F9F9F8;border-radius:12px;">
+                            <span style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#6B7280;">Plan ID</span>
+                            <span style="font-weight:600;color:#111111;font-size:0.8rem;">${sub.plan_id}</span>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">${actionButtons}</div>
                 `;
             } catch (e) { console.error("Error fetching subscription:", e); }
         }
@@ -636,7 +1528,7 @@
                 
                 tbody.innerHTML = "";
                 if (invoices.length === 0) {
-                    tbody.innerHTML = "<tr><td colspan='5' style='text-align: center; color: var(--text-muted);'>No past invoices found.</td></tr>";
+                    tbody.innerHTML = `<tr><td colspan='5' style='text-align:center;color:#6B7280;padding:2rem;'>No past invoices found.</td></tr>`;
                     return;
                 }
 
@@ -651,32 +1543,33 @@
                     else if (inv.status === "uncollectible") badgeClass = "badge danger";
 
                     let actionButtons = `
-                        <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; margin-right: 4px;" 
+                        <button class="btn btn-outline" style="padding:0.35rem 0.75rem;font-size:0.75rem;margin-right:4px;" 
                             onclick="downloadPDF('${inv.id}', '${invoiceNum}')">
-                            📥 PDF
+                            ↓ PDF
                         </button>
                     `;
 
-                    // --- UPDATED: THIS NOW OPENS THE MODAL INSTEAD OF FIRING THE REQUEST ---
                     if (inv.status === "open") {
                         actionButtons += `
-                            <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;" 
+                            <button class="btn" style="padding:0.35rem 0.75rem;font-size:0.75rem;" 
                                 onclick="openPaymentModal('${inv.id}', '${inv.customer_id}', ${inv.amount_due}, '${invoiceNum}')">
-                                💳 Pay Now
+                                Pay Now
                             </button>
                         `;
                     }
 
                     tbody.innerHTML += `
                         <tr>
-                            <td style="font-weight: 600;">${invoiceNum}</td>
-                            <td style="font-weight: 700; color: var(--text-dark-mint);">$${parseFloat(inv.amount_due).toFixed(2)}</td>
-                            <td>${dueDate}</td>
+                            <td style="font-weight:700;font-family:monospace;font-size:0.82rem;">${invoiceNum}</td>
+                            <td style="font-weight:800;color:#111111;">$${parseFloat(inv.amount_due).toFixed(2)}</td>
+                            <td style="color:#6B7280;">${dueDate}</td>
                             <td><span class="${badgeClass}">${inv.status.toUpperCase()}</span></td>
                             <td>${actionButtons}</td>
                         </tr>
                     `;
                 });
+                // ✔ Update the invoice sparkline summary bar
+                updateInvoiceSparkline(invoices);
             } catch (e) { console.error("Error fetching invoices:", e); }
         }
 
@@ -727,19 +1620,16 @@
             } catch (e) { console.error("PDF Download Error:", e); }
         }
 
-        // --- NEW: CHECKOUT MODAL LOGIC ---
+        // CHECKOUT MODAL LOGIC
         function openPaymentModal(invoiceId, customerId, amountDue, invoiceNumber) {
-            // Save details to global variables so the form submission can access them
             pendingInvoiceId = invoiceId;
             pendingCustomerId = customerId;
             pendingAmount = amountDue;
 
-            // Update modal text dynamically
             const formattedAmount = parseFloat(amountDue).toFixed(2);
             document.getElementById('paymentModalDesc').innerText = `Invoice ${invoiceNumber} • $${formattedAmount}`;
             document.getElementById('confirmPaymentBtn').innerText = `Pay $${formattedAmount}`;
 
-            // Show the modal
             document.getElementById('paymentModal').classList.add('active');
         }
 
@@ -747,7 +1637,6 @@
             document.getElementById('paymentModal').classList.remove('active');
             document.getElementById('simulatedPaymentForm').reset();
             
-            // Reset button state just in case
             const btn = document.getElementById('confirmPaymentBtn');
             btn.disabled = false;
             btn.innerText = `Pay Now`;
@@ -757,7 +1646,6 @@
         document.getElementById("simulatedPaymentForm").addEventListener("submit", async (e) => {
             e.preventDefault(); 
             
-            // Change button to look like it is processing
             const btn = document.getElementById('confirmPaymentBtn');
             btn.disabled = true;
             btn.innerText = "Processing Payment...";
@@ -774,13 +1662,8 @@
 
                 if (res.ok) {
                     const data = await res.json();
-                    
-                    // Close the modal instantly
                     closePaymentModal();
-                    
                     alert(`${data.message}\n\n(Wait ~3 seconds, then we will automatically refresh the table to check the webhook result!)`);
-                    
-                    // Automatically refresh after bank processing time (2s + 1s buffer)
                     setTimeout(() => {
                         fetchMyInvoices();
                         fetchMySubscription(); 
@@ -788,13 +1671,139 @@
                 } else {
                     const err = await res.json();
                     alert("Failed to initiate payment: " + JSON.stringify(err));
-                    btn.disabled = false; // Re-enable button if request failed
+                    btn.disabled = false;
                 }
             } catch (error) {
                 console.error("Payment Error:", error);
                 btn.disabled = false;
             }
         });
+
+        /* ══════════════════════════════════════
+           ANIMATION RUNTIME
+        ══════════════════════════════════════ */
+
+        // ── Invoice sparkline builder ──
+        let sparkInstance = null;
+        function updateInvoiceSparkline(invoices) {
+            const wrap     = document.getElementById('invoiceSparkWrap');
+            const totalEl  = document.getElementById('invSparkTotal');
+            const subEl    = document.getElementById('invSparkSub');
+            const canvas   = document.getElementById('invoiceSparkline');
+            if (!wrap || !canvas || !Chart || invoices.length === 0) return;
+
+            // Calculate total billed
+            const total = invoices.reduce((s, inv) => s + (parseFloat(inv.amount_due) || 0), 0);
+            const paid  = invoices.filter(i => i.status === 'paid').length;
+            const open  = invoices.filter(i => i.status === 'open').length;
+
+            totalEl.textContent = '$' + total.toFixed(2);
+            subEl.textContent   = `${paid} paid · ${open} open · ${invoices.length} total`;
+
+            // Build mini sparkline data (amount per invoice, ordered)
+            const vals = invoices
+                .slice(-12)
+                .map(i => parseFloat(i.amount_due) || 0);
+
+            if (sparkInstance) sparkInstance.destroy();
+
+            sparkInstance = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: vals.map((_, i) => i),
+                    datasets: [{
+                        data: vals,
+                        borderColor: '#E8453C',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.42,
+                        fill: true,
+                        backgroundColor: (ctx) => {
+                            const grad = ctx.chart.ctx.createLinearGradient(0, 0, 0, 48);
+                            grad.addColorStop(0, 'rgba(232,69,60,0.22)');
+                            grad.addColorStop(1, 'rgba(232,69,60,0)');
+                            return grad;
+                        }
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales:  { x: { display: false }, y: { display: false } },
+                    animation: { duration: 1000, easing: 'easeInOutQuart' }
+                }
+            });
+
+            // Show and trigger scroll-reveal
+            wrap.style.display = 'flex';
+            requestAnimationFrame(() => wrap.classList.add('revealed'));
+        }
+
+        // ── Button ripple effect ──
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn');
+            if (!btn) return;
+            // Calculate click position relative to button
+            const rect = btn.getBoundingClientRect();
+            btn.style.setProperty('--ripple-x', `${e.clientX - rect.left}px`);
+            btn.style.setProperty('--ripple-y', `${e.clientY - rect.top}px`);
+            btn.classList.remove('ripple');
+            void btn.offsetWidth; // reflow
+            btn.classList.add('ripple');
+            setTimeout(() => btn.classList.remove('ripple'), 600);
+        });
+
+        // ── Scroll-reveal with IntersectionObserver ──
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12 });
+
+        document.querySelectorAll('.will-reveal').forEach(el => revealObserver.observe(el));
+
+        // ── Animated number counter (runs when a metric value changes) ──
+        function animateCounter(el, target, prefix = '', decimals = 0, duration = 900) {
+            if (!el) return;
+            const start    = 0;
+            const startTs  = performance.now();
+            const step = (timestamp) => {
+                const elapsed = timestamp - startTs;
+                const progress = Math.min(elapsed / duration, 1);
+                // Ease out cubic
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const current = start + (target - start) * eased;
+                el.textContent = prefix + current.toFixed(decimals);
+                if (progress < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        }
+
+        // ── Re-run card entrance animations on section switch ──
+        // Patch the existing switchView to re-trigger card animations
+        const _origSwitchView = window.switchView;
+        window.switchView = function(targetId) {
+            if (typeof _origSwitchView === 'function') _origSwitchView(targetId);
+            // Re-animate cards in the newly shown section
+            setTimeout(() => {
+                const section = document.getElementById(targetId);
+                if (!section) return;
+                section.querySelectorAll('.card-anim').forEach((card, i) => {
+                    card.style.animation = 'none';
+                    void card.offsetWidth;
+                    if (card.classList.contains('card-dark')) {
+                        card.style.animation = `cardEntrance 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 0.08}s both, darkCardGlow 4s ease-in-out infinite`;
+                    } else {
+                        card.style.animation = `cardEntrance 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 0.08}s both`;
+                    }
+                });
+                // Re-observe any will-reveal elements
+                section.querySelectorAll('.will-reveal:not(.revealed)').forEach(el => revealObserver.observe(el));
+            }, 30);
+        };
     </script>
 </body>
 </html>
