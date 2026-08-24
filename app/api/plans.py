@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 from pydantic import BaseModel
 
 # 1. Imports mapping to your exact project structure
 from app.database.connection import get_db 
-from app.models.core import Plan  
+from app.models.core import Plan, Subscription
 from app.schemas.customer import PlanCreate, PlanRead
 from app.core.security import get_admin_user
+from app.core.notifications import notify_customers
 
 # 2. Set up the FastAPI router
 router = APIRouter(
@@ -51,6 +53,9 @@ def create_subscription_plan(
     db.add(new_plan)
     db.commit()
     db.refresh(new_plan)
+
+    notify_customers(db, f"A new plan, '{new_plan.name}', is now available.")
+    db.commit()
     
     return new_plan
 
@@ -80,8 +85,32 @@ def delete_plan(
     plan = db.query(Plan).filter(Plan.id == plan_id).first()
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
+
+    plan_name = plan.name
     
-    db.delete(plan)
+    active_subscriptions = db.query(Subscription).filter(
+        Subscription.plan_id == plan_id
+    ).count()
+    if active_subscriptions:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"Cannot delete '{plan_name}' because it is used by "
+                f"{active_subscriptions} subscription(s). Change those subscriptions first."
+            )
+        )
+
+    try:
+        db.delete(plan)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete this plan because other records still reference it."
+        )
+
+    notify_customers(db, f"The plan '{plan_name}' has been removed by the administrator.")
     db.commit()
     return None
 

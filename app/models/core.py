@@ -48,7 +48,7 @@ class PaymentStatus(str, enum.Enum):
 class Customer(Base):
     __tablename__ = "customers"
 
-    id = Column(String, primary_key=True, index=True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     is_admin = Column(Boolean, default=False)
@@ -118,14 +118,14 @@ class Invoice(Base):
     __tablename__ = "invoices"
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    invoice_number = Column(String, unique=True, index=True, default=generate_invoice_number) # NEW
+    invoice_number = Column(String, unique=True, index=True, default=generate_invoice_number)
     
     customer_id = Column(String, ForeignKey("customers.id"), nullable=False)
     subscription_id = Column(String, ForeignKey("subscriptions.id"), nullable=True)
     
-    subtotal = Column(Float, default=0.0, nullable=False)   # NEW
-    tax_amount = Column(Float, default=0.0, nullable=False) # NEW
-    amount_due = Column(Float, nullable=False)              # Final Total
+    subtotal = Column(Float, default=0.0, nullable=False)
+    tax_amount = Column(Float, default=0.0, nullable=False)
+    amount_due = Column(Float, nullable=False)
     amount_paid = Column(Float, default=0.0)
     currency = Column(String, default="USD")
     
@@ -177,4 +177,17 @@ class AuditLog(Base):
     old_value = Column(String, nullable=True)
     new_value = Column(String, nullable=True)
     
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    # We generate a random ID for every new notification
+    id = Column(String, primary_key=True, index=True, default=lambda: f"NOTIF-{uuid.uuid4().hex[:8].upper()}")
+    
+    # If customer_id is NULL, it means this is a global alert for the ADMIN
+    customer_id = Column(String, index=True, nullable=True) 
+    
+    message = Column(String, nullable=False)
+    is_read = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

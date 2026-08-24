@@ -233,6 +233,8 @@
         border-radius: 18px;
         border: 1px solid rgba(226,226,224,0.8);
         box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.04);
+        position: relative;
+        z-index: 40;
     }
 
     .user-welcome h1 {
@@ -245,6 +247,47 @@
     }
 
     .topbar-right { display: flex; align-items: center; gap: 0.65rem; }
+
+    /* --- NEW: NOTIFICATION STYLES --- */
+    .bell-btn {
+        background: #FAFAF8; border: 1px solid #E8E8E6;
+        border-radius: 50%; width: 36px; height: 36px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; color: #111111; transition: all 0.2s ease;
+    }
+    .bell-btn:hover { background: #F3F3F1; }
+    .notif-badge {
+        position: absolute; top: -4px; right: -4px;
+        background: var(--danger); color: white;
+        font-size: 0.6rem; font-weight: 800;
+        width: 16px; height: 16px; border-radius: 50%;
+        display: none; align-items: center; justify-content: center;
+        border: 2px solid white;
+    }
+    .notif-dropdown {
+        position: absolute; top: calc(100% + 12px); right: 0;
+        width: min(360px, calc(100vw - 2rem)); background: white; border: 1px solid var(--border-color);
+        border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+        display: none; flex-direction: column; z-index: 1200; overflow: hidden;
+    }
+    .notif-dropdown.active { display: flex; animation: slideDown 0.2s ease; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .notif-header { padding: 16px; border-bottom: 1px solid var(--border-color); font-weight: 800; font-size: 0.95rem; }
+    .notif-body { max-height: 320px; overflow-y: auto; }
+    .notif-item {
+        padding: 16px; border-bottom: 1px solid #F3F3F1; font-size: 0.85rem;
+        color: var(--text-main); display: flex; justify-content: space-between;
+        align-items: flex-start; gap: 10px; transition: background 0.2s;
+    }
+    .notif-item:hover { background: #FAFAF8; }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-time { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; display: block; font-weight: 600; }
+    .mark-read-btn { background: rgba(232,69,60,0.1); border: none; color: var(--accent); padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease;}
+    .mark-read-btn:hover { background: var(--accent); color: white; }
+    .empty-notif { padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+
+    .notification-wrapper { position: relative; z-index: 1200; }
+    .notif-item > div { min-width: 0; overflow-wrap: anywhere; }
 
     /* ══════════════════════════════════════════
        VIEW SECTIONS
@@ -845,7 +888,12 @@
         .ov-metric::after { display: none; }
         table { display: block; overflow-x: auto; white-space: nowrap; }
         .section-header { flex-direction: column; align-items: flex-start; }
-        .header-bar { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        .header-bar { flex-direction: row; align-items: center; gap: 0.75rem; }
+        .user-welcome { min-width: 0; }
+        .user-welcome h1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-welcome p { display: none; }
+        .topbar-right { flex-shrink: 0; margin-left: auto; }
+        .notif-dropdown { position: fixed; top: 4.5rem; right: 1rem; left: 1rem; width: auto; }
     }
     </style>
 </head>
@@ -1074,6 +1122,23 @@
                         <p>Global billing operations · Revenue analytics · Platform management</p>
                     </div>
                     <div class="topbar-right">
+                        <!-- NEW NOTIFICATION DROP-DOWN -->
+                        <div class="notification-wrapper" style="position: relative; margin-right: 0.5rem;">
+                            <button class="bell-btn" onclick="toggleNotifDropdown()">
+                                <i data-lucide="bell" style="width:18px;height:18px;"></i>
+                            </button>
+                            <div class="notif-badge" id="notifBadge">0</div>
+                            
+                            <div class="notif-dropdown" id="notifDropdown">
+                                <div class="notif-header">
+                                    <span>System Alerts</span>
+                                </div>
+                                <div class="notif-body" id="notifBody">
+                                    <div class="empty-notif">Loading...</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <span class="badge warning" style="padding:0.32rem 0.8rem;font-size:0.7rem;">
                             <i data-lucide="shield" style="width:10px;height:10px;"></i>
                             Superuser
@@ -1500,8 +1565,7 @@
     </div>
 
     <!-- ═══════════════════════════════════════════
-         JAVASCRIPT — All original logic preserved.
-         New: chart helpers + invoice filter UI
+         JAVASCRIPT
     ═══════════════════════════════════════════ -->
     <script>
         const API_BASE_URL = "http://127.0.0.1:8000";
@@ -1570,6 +1634,7 @@
             fetchCustomers();
             fetchSubscriptions();
             fetchInvoices();
+            fetchNotifications(); // FETCH ADMIN ALERTS
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
         };
@@ -1577,6 +1642,64 @@
         function logout() {
             localStorage.removeItem("access_token");
             window.location.href = "auth.html";
+        }
+
+        // --- NEW: NOTIFICATION LOGIC ---
+        function toggleNotifDropdown() {
+            document.getElementById('notifDropdown').classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const wrapper = document.querySelector('.notification-wrapper');
+            if (wrapper && !wrapper.contains(event.target)) {
+                document.getElementById('notifDropdown').classList.remove('active');
+            }
+        });
+
+        async function fetchNotifications() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/users/admin/notifications`, {
+                    method: 'GET',
+                    headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` }
+                });
+                const notifs = await res.json();
+                
+                const badge = document.getElementById('notifBadge');
+                const body = document.getElementById('notifBody');
+                
+                if (notifs.length > 0) {
+                    badge.style.display = 'flex';
+                    badge.innerText = notifs.length;
+                    body.innerHTML = '';
+                    
+                    notifs.forEach(n => {
+                        const date = new Date(n.created_at).toLocaleString();
+                        body.innerHTML += `
+                            <div class="notif-item">
+                                <div>
+                                    ${n.message}
+                                    <span class="notif-time">${date}</span>
+                                </div>
+                                <button class="mark-read-btn" onclick="markRead('${n.id}')">Dismiss</button>
+                            </div>
+                        `;
+                    });
+                } else {
+                    badge.style.display = 'none';
+                    body.innerHTML = `<div class="empty-notif">No new alerts!</div>`;
+                }
+            } catch(e) { console.error("Error fetching notifications", e); }
+        }
+
+        async function markRead(id) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/users/notifications/${id}/read`, {
+                    method: 'PUT',
+                    headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` }
+                });
+                if (res.ok) fetchNotifications(); // Refresh the dropdown instantly
+            } catch(e) { console.error("Error dismissing notification", e); }
         }
 
         function openModal() {
@@ -1672,8 +1795,22 @@
                 const response = await fetch(`${API_BASE_URL}/plans/${planId}`, {
                     method: "DELETE", headers: { "Authorization": `Bearer ${token}` }
                 });
-                if (response.ok) fetchPlans(); 
-            } catch (error) { alert("Error deleting plan."); }
+                if (response.ok) {
+                    await fetchPlans();
+                    return;
+                }
+
+                let errorMessage = `Delete failed (${response.status}).`;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.detail || errorMessage;
+                } catch (parseError) {
+                    // Keep the HTTP status when the server did not return JSON.
+                }
+                alert(errorMessage);
+            } catch (error) {
+                alert("Could not reach the billing server. Check that the API is running.");
+            }
         }
 
         // ── EDIT PLAN (100% original) ──
@@ -1764,7 +1901,7 @@
                 buildSparkSubs(subscriptions);
 
                 subscriptions.forEach((sub, i) => {
-                    const shortId    = sub.id          ? sub.id.split('-')[0].toUpperCase()          : "N/A";
+                    const shortId    = sub.id          ? sub.id.split('-')[0].toUpperCase()         : "N/A";
                     const shortCustId= sub.customer_id ? sub.customer_id.split('-')[0].toUpperCase() : "N/A";
                     const shortPlanId= sub.plan_id     ? sub.plan_id.split('-')[0].toUpperCase()     : "N/A";
                     const renewalDate= sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : "Unknown";
@@ -1800,7 +1937,7 @@
                 let pendingRevenue = 0;
 
                 globalInvoicesData.forEach((inv, i) => {
-                    const shortId    = inv.id          ? inv.id.split('-')[0].toUpperCase()          : "N/A";
+                    const shortId    = inv.id          ? inv.id.split('-')[0].toUpperCase()         : "N/A";
                     const shortCustId= inv.customer_id ? inv.customer_id.split('-')[0].toUpperCase() : "N/A";
                     const dueDate    = inv.due_date ? new Date(inv.due_date).toLocaleDateString() : "Unknown";
                     const badgeClass = inv.status === "paid" ? "badge active" : "badge warning";

@@ -3,12 +3,14 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from jose import jwt, JWTError
+import uuid
 
 # We need passlib to securely hash the new password if they change it
 from passlib.context import CryptContext
 
 from app.database.connection import get_db
 import app.models.core as models
+from app.core.notifications import notify_admin
 
 router = APIRouter(
     prefix="/users",
@@ -79,12 +81,52 @@ def update_my_profile(
         customer.hashed_password = hashed_pw
         
     db.commit()
-    
+
+    # --- NEW: TRIGGER ADMIN NOTIFICATION ---
+    notify_admin(db, f"Customer '{customer.email}' updated their profile details.")
+    db.commit()
+
     return {"status": "success", "message": "Profile updated successfully!"}
 
-    # 3. GET ALL USERS (Admin View)
+
+# 3. GET ALL USERS (Admin View)
 @router.get("/all")
 def get_all_users(db: Session = Depends(get_db)):
     """Fetches all registered users for the Admin Dashboard."""
     users = db.query(models.Customer).order_by(models.Customer.created_at.desc()).all()
     return users
+
+
+# ==========================================
+# --- NEW NOTIFICATION ENDPOINTS ---
+# ==========================================
+
+# 4. GET MY NOTIFICATIONS (Customer View)
+@router.get("/me/notifications")
+def get_my_notifications(db: Session = Depends(get_db), customer: models.Customer = Depends(get_current_customer)):
+    """Fetches unread notifications specifically for the logged-in user."""
+    notifs = db.query(models.Notification).filter(
+        models.Notification.customer_id == customer.id,
+        models.Notification.is_read == False
+    ).order_by(models.Notification.created_at.desc()).all()
+    return notifs
+
+# 5. GET ADMIN NOTIFICATIONS (Admin View)
+@router.get("/admin/notifications")
+def get_admin_notifications(db: Session = Depends(get_db)):
+    """Fetches global unread system alerts for the Administrator."""
+    notifs = db.query(models.Notification).filter(
+        models.Notification.customer_id == None,
+        models.Notification.is_read == False
+    ).order_by(models.Notification.created_at.desc()).all()
+    return notifs
+
+# 6. MARK NOTIFICATION AS READ
+@router.put("/notifications/{notif_id}/read")
+def mark_notification_read(notif_id: str, db: Session = Depends(get_db)):
+    """Dismisses a notification by marking it as read."""
+    notif = db.query(models.Notification).filter(models.Notification.id == notif_id).first()
+    if notif:
+        notif.is_read = True
+        db.commit()
+    return {"status": "success"}

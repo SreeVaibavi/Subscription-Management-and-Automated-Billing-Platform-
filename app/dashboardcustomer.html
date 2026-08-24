@@ -15,9 +15,6 @@
     <!-- Chart.js for invoice sparkline -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    <!-- Design System -->
-    <link rel="stylesheet" href="ui-redesign.css">
-
     <style>
         /* ── Page-specific additions ── */
         :root {
@@ -182,6 +179,38 @@
         .sidebar-bottom {
             border-top: 1px solid rgba(255,255,255,0.07);
             padding-top: 1rem;
+            position: absolute;
+            left: 1rem;
+            right: 1rem;
+            bottom: 1rem;
+        }
+
+        .sidebar-bottom .logout-link {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            width: 100%;
+            padding: 0.7rem 0.75rem;
+            color: rgba(255,255,255,0.72);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .sidebar-bottom .logout-link:hover {
+            color: #FFFFFF;
+            background: rgba(232,69,60,0.16);
+        }
+
+        .sidebar-bottom .logout-link .nav-icon {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
         /* Mobile overlay & toggle */
@@ -231,6 +260,8 @@
             border-radius: 20px;
             border: 1px solid #E5E5E3;
             box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            position: relative;
+            z-index: 20;
         }
 
         .user-welcome h1 {
@@ -245,6 +276,47 @@
             font-size: 0.8rem;
             margin-top: 2px;
         }
+
+        /* --- NEW: NOTIFICATION STYLES --- */
+        .header-actions { display: flex; align-items: center; gap: 1rem; position: relative; z-index: 30; }
+        .notification-wrapper { position: relative; z-index: 40; }
+        .bell-btn {
+            background: #FAFAF8; border: 1.5px solid #E8E8E6;
+            border-radius: 50%; width: 42px; height: 42px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #111111; transition: all 0.2s ease;
+        }
+        .bell-btn:hover { background: #F3F3F1; }
+        .notif-badge {
+            position: absolute; top: -2px; right: -2px;
+            background: var(--danger); color: white;
+            font-size: 0.65rem; font-weight: 800;
+            width: 18px; height: 18px; border-radius: 50%;
+            display: none; align-items: center; justify-content: center;
+            border: 2px solid white;
+        }
+        .notif-dropdown {
+            position: absolute; top: calc(100% + 12px); right: 0;
+            width: min(360px, calc(100vw - 2rem)); background: white; border: 1px solid var(--border-color);
+            border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            display: none; flex-direction: column; z-index: 50; overflow: hidden;
+        }
+        .notif-dropdown.active { display: flex; animation: slideDown 0.2s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .notif-header { padding: 16px; border-bottom: 1px solid var(--border-color); font-weight: 800; font-size: 0.95rem; }
+        .notif-body { max-height: 320px; overflow-y: auto; }
+        .notif-item {
+            padding: 16px; border-bottom: 1px solid #F3F3F1; font-size: 0.85rem;
+            color: var(--text-main); display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 10px; transition: background 0.2s;
+        }
+        .notif-item:hover { background: #FAFAF8; }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-time { font-size: 0.7rem; color: var(--text-muted); margin-top: 6px; display: block; font-weight: 600; }
+        .mark-read-btn { background: rgba(232,69,60,0.1); border: none; color: #E8453C; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease;}
+        .mark-read-btn:hover { background: #E8453C; color: white; }
+        .empty-notif { padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+        .notif-item > div { min-width: 0; overflow-wrap: anywhere; }
 
         /* ── View Sections ── */
         .view-section { display: none; animation: bwFadeSlide 0.35s cubic-bezier(0.16,1,0.3,1) both; }
@@ -547,6 +619,7 @@
             text-align: left;
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
             overflow: hidden;
@@ -674,6 +747,8 @@
         @media (max-width: 600px) {
             .dashboard-grid { grid-template-columns: 1fr; }
             .header-bar { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+            .header-actions { width: 100%; justify-content: space-between; }
+            .notif-dropdown { position: fixed; top: 5.5rem; right: 1rem; left: 1rem; width: auto; }
             table { display: block; overflow-x: auto; white-space: nowrap; }
             .actions-row { flex-direction: column; }
             .actions-row .btn { width: 100%; }
@@ -741,7 +816,7 @@
             <div class="sidebar-bottom">
                 <ul class="nav-links">
                     <li>
-                        <a href="#" onclick="logout()">
+                        <a class="logout-link" href="#" onclick="logout()">
                             <span class="nav-icon"><i data-lucide="log-out" style="width:16px;height:16px;"></i></span>
                             <span>Logout</span>
                         </a>
@@ -750,7 +825,7 @@
             </div>
         </aside>
 
-        <!-- Decorative animated background (matches admin finance-ledger theme) -->
+        <!-- Decorative animated background -->
         <div class="cust-bg" aria-hidden="true">
             <svg viewBox="0 0 820 560" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
                 <defs>
@@ -766,7 +841,6 @@
                 </defs>
                 <rect width="820" height="560" fill="url(#custGlow)"/>
                 <rect width="820" height="560" fill="url(#custGlow2)"/>
-                <!-- Finance ledger grid -->
                 <g stroke="#E8453C" stroke-opacity="0.045" stroke-width="0.5">
                     <line x1="0" y1="70"  x2="820" y2="70"/>
                     <line x1="0" y1="140" x2="820" y2="140"/>
@@ -785,13 +859,11 @@
                     <line x1="656" y1="0" x2="656" y2="560"/>
                     <line x1="738" y1="0" x2="738" y2="560"/>
                 </g>
-                <!-- Abstract billing flow arcs -->
                 <g fill="none" stroke="#E8453C" stroke-opacity="0.08" stroke-width="1">
                     <path d="M200 560 Q360 300 560 180" stroke-dasharray="4,8"/>
                     <path d="M100 560 Q320 340 620 140" stroke-dasharray="3,10"/>
                     <path d="M350 560 Q450 380 620 260" stroke-dasharray="4,8"/>
                 </g>
-                <!-- Connection nodes -->
                 <g class="bg-node">
                     <circle cx="560" cy="180" r="5" fill="#E8453C" fill-opacity="0.55"/>
                     <circle cx="560" cy="180" r="11" fill="#E8453C" fill-opacity="0.1"/>
@@ -812,14 +884,12 @@
                     <circle cx="700" cy="220" r="3"   fill="#F59E0B" fill-opacity="0.4"/>
                     <circle cx="700" cy="220" r="7"   fill="#F59E0B" fill-opacity="0.07"/>
                 </g>
-                <!-- Connection lines between nodes -->
                 <g stroke="#E8453C" stroke-opacity="0.1" stroke-width="0.6" stroke-dasharray="3,6">
                     <line x1="560" y1="180" x2="420" y2="270"/>
                     <line x1="560" y1="180" x2="620" y2="140"/>
                     <line x1="420" y1="270" x2="310" y2="340"/>
                     <line x1="620" y1="140" x2="700" y2="220"/>
                 </g>
-                <!-- Floating label text -->
                 <g font-family="Inter,sans-serif" fill="#E8453C" fill-opacity="0.3" font-size="8.5" font-weight="700">
                     <text x="530" y="172">BILLING HUB</text>
                     <text x="630" y="134">INVOICED</text>
@@ -837,8 +907,25 @@
                     <h1 id="welcomeHeader">Welcome to BillWise!</h1>
                     <p>Manage your subscriptions, plans, and invoices.</p>
                 </div>
-                <div>
+                <div class="header-actions">
                     <span class="badge neutral" id="headerStatusBadge">Checking Status...</span>
+                    
+                    <!-- NEW NOTIFICATION DROP-DOWN -->
+                    <div class="notification-wrapper">
+                        <button class="bell-btn" onclick="toggleNotifDropdown()">
+                            <i data-lucide="bell" style="width:18px;height:18px;"></i>
+                        </button>
+                        <div class="notif-badge" id="notifBadge">0</div>
+                        
+                        <div class="notif-dropdown" id="notifDropdown">
+                            <div class="notif-header">
+                                <span>Recent Notifications</span>
+                            </div>
+                            <div class="notif-body" id="notifBody">
+                                <div class="empty-notif">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -1362,6 +1449,8 @@
             fetchCustomerPlans(); 
             fetchMySubscription();
             fetchMyInvoices();
+            fetchNotifications(); // FETCH NOTIFICATIONS ALERTS
+            setInterval(fetchNotifications, 30000);
 
             // Init Lucide icons
             if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -1383,6 +1472,58 @@
             const response = await fetch(API_BASE_URL + endpoint, { ...options, headers });
             if (response.status === 401) logout();
             return response;
+        }
+
+        // --- NEW: NOTIFICATION LOGIC ---
+        function toggleNotifDropdown() {
+            document.getElementById('notifDropdown').classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const wrapper = document.querySelector('.notification-wrapper');
+            if (wrapper && !wrapper.contains(event.target)) {
+                document.getElementById('notifDropdown').classList.remove('active');
+            }
+        });
+
+        async function fetchNotifications() {
+            try {
+                const res = await authFetch('/users/me/notifications');
+                const notifs = await res.json();
+                
+                const badge = document.getElementById('notifBadge');
+                const body = document.getElementById('notifBody');
+                
+                if (notifs.length > 0) {
+                    badge.style.display = 'flex';
+                    badge.innerText = notifs.length;
+                    body.innerHTML = '';
+                    
+                    notifs.forEach(n => {
+                        const date = new Date(n.created_at).toLocaleString();
+                        body.innerHTML += `
+                            <div class="notif-item">
+                                <div>
+                                    ${n.message}
+                                    <span class="notif-time">${date}</span>
+                                </div>
+                                <button class="mark-read-btn" onclick="markRead('${n.id}')">Dismiss</button>
+                            </div>
+                        `;
+                    });
+                } else {
+                    badge.style.display = 'none';
+                    body.innerHTML = `<div class="empty-notif">No new alerts!</div>`;
+                }
+            } catch(e) { console.error("Error fetching notifications", e); }
+        }
+
+        async function markRead(id) {
+            try {
+                const res = await authFetch(`/users/notifications/${id}/read`, { method: 'PUT' });
+                if (res.ok) fetchNotifications(); // Refresh the dropdown instantly
+            } catch(e) { console.error("Error dismissing notification", e); }
         }
 
         // FETCH PROFILE DATA

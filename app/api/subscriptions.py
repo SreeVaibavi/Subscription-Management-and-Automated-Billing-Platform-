@@ -10,6 +10,7 @@ import httpx
 from app.database.connection import get_db
 import app.models.core as models
 from app.core import billing_math
+from app.core.notifications import notify_admin
 
 router = APIRouter(
     prefix="/subscriptions",
@@ -97,6 +98,9 @@ def create_subscription(
     )
     db.add(audit)
     db.commit()
+
+    notify_admin(db, f"Customer '{customer.email}' subscribed to the '{plan.name}' plan.")
+    db.commit()
     
     return new_sub
 
@@ -151,6 +155,9 @@ def change_subscription_plan(
     )
     db.add(audit)
     db.commit()
+
+    notify_admin(db, f"Customer '{customer.email}' changed from plan '{old_plan_id}' to '{new_plan.name}'.")
+    db.commit()
     
     return {
         "message": "Plan updated successfully", 
@@ -184,6 +191,9 @@ def pause_subscription(
         new_value=sub.status.value
     )
     db.add(audit)
+    db.commit()
+
+    notify_admin(db, f"Customer '{customer.email}' paused subscription '{sub.id}'.")
     db.commit()
     
     return {"message": "Subscription paused successfully"}
@@ -219,6 +229,9 @@ def resume_subscription(
         new_value=new_status.value
     )
     db.add(audit)
+    db.commit()
+
+    notify_admin(db, f"Customer '{customer.email}' resumed subscription '{sub.id}'.")
     db.commit()
     
     return {"message": "Subscription resumed successfully", "status": new_status}
@@ -270,6 +283,9 @@ def cancel_subscription(
         new_value=sub.status.value
     )
     db.add(audit)
+    db.commit()
+
+    notify_admin(db, f"Customer '{customer.email}' cancelled subscription '{sub.id}' ({action.lower().replace('_', ' ')}).")
     db.commit()
     
     return {"message": "Cancellation processed", "subscription_status": sub.status, "cancel_at_period_end": sub.cancel_at_period_end}

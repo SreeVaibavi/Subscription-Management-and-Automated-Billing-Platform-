@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -15,6 +15,7 @@ from app.core.security import get_password_hash, verify_password, create_access_
 
 # IMPORTANT: Adjust this import based on exactly where your Customer model is!
 from app.models.core import Customer 
+from app.utils.email_utils import send_welcome_email
 
 router = APIRouter(
     prefix="/auth",
@@ -26,7 +27,11 @@ class GoogleToken(BaseModel):
     token: str
 
 @router.post("/register", response_model=CustomerResponse, status_code=status.HTTP_201_CREATED)
-def register_user(user_data: CustomerCreate, db: Session = Depends(get_db)):
+def register_user(
+    user_data: CustomerCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     # 1. Check if the email already exists in the database
     existing_user = db.query(Customer).filter(Customer.email == user_data.email).first()
     if existing_user:
@@ -43,6 +48,9 @@ def register_user(user_data: CustomerCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
+    user_name = new_user.full_name or new_user.email.split("@", 1)[0]
+    background_tasks.add_task(send_welcome_email, new_user.email, user_name)
     
     # 4. Return the newly created user (password is safely hidden by the schema)
     return new_user
@@ -68,7 +76,11 @@ def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
 
 # --- NEW GOOGLE AUTH ROUTE ---
 @router.post("/google")
-def google_auth(token_data: GoogleToken, db: Session = Depends(get_db)):
+def google_auth(
+    token_data: GoogleToken,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     try:
         # 1. Verify the token directly with Google's servers
         CLIENT_ID = "947976051057-ncvdo5vr5ov3uqm49vvbg3kk9oq16t4v.apps.googleusercontent.com"
@@ -99,6 +111,10 @@ def google_auth(token_data: GoogleToken, db: Session = Depends(get_db)):
             db.add(user)
             db.commit()
             db.refresh(user)
+            user_name = user.full_name or user.email.split("@", 1)[0]
+            # Google registration is also a new customer registration.
+            # A normal Google login does not resend this email.
+            background_tasks.add_task(send_welcome_email, user.email, user_name)
         
         # 4. Generate YOUR app's JWT token
         access_token = create_access_token(data={"sub": user.email}) 

@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import logging
 
 from app.database.connection import get_db
 import app.models.core as models
+from app.core.notifications import notify_admin
+from app.utils.email_utils import send_payment_receipt_for_invoice
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +31,11 @@ class PaymentWebhookPayload(BaseModel):
 
 # --- THE WEBHOOK LISTENER ENDPOINT ---
 @router.post("/payments")
-async def payment_event_webhook(payload: PaymentWebhookPayload, db: Session = Depends(get_db)):
+async def payment_event_webhook(
+    payload: PaymentWebhookPayload,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     """
     Receives payment events from the mock gateway (or Stripe).
     Updates invoice statuses and subscription access based on payment success/failure.
@@ -44,6 +50,9 @@ async def payment_event_webhook(payload: PaymentWebhookPayload, db: Session = De
     if not invoice:
         logger.error(f"Webhook Error: Invoice {data.invoice_id} not found.")
         raise HTTPException(status_code=404, detail="Invoice not found")
+
+    customer = db.query(models.Customer).filter(models.Customer.id == data.customer_id).first()
+    customer_label = customer.email if customer else data.customer_id
 
     # 2. Record the actual Payment Attempt in the database
     # For refunds, we treat the 'refunded' status as a successful transaction of the negative amount
@@ -64,8 +73,11 @@ async def payment_event_webhook(payload: PaymentWebhookPayload, db: Session = De
         # Mark invoice as successfully paid
         invoice.status = models.InvoiceStatus.paid
         invoice.amount_paid = data.amount_attempted
+
+        notify_admin(db, f"Payment succeeded for customer '{customer_label}' on invoice '{invoice.invoice_number}'.")
         
         db.commit()
+        background_tasks.add_task(send_payment_receipt_for_invoice, invoice.id)
         logger.info(f"SUCCESS: Invoice {invoice.invoice_number} marked as PAID.")
         
     elif event_type == "payment_intent.failed":
@@ -89,6 +101,8 @@ async def payment_event_webhook(payload: PaymentWebhookPayload, db: Session = De
                 )
                 db.add(audit)
                 logger.warning(f"FAILURE: Subscription {sub.id} locked to PAST_DUE due to payment failure.")
+
+        notify_admin(db, f"Payment failed for customer '{customer_label}' on invoice '{invoice.invoice_number}'.")
                 
         db.commit()
         
@@ -96,6 +110,8 @@ async def payment_event_webhook(payload: PaymentWebhookPayload, db: Session = De
         # Mark the negative refund invoice as officially processed (paid out to the user)
         invoice.status = models.InvoiceStatus.paid
         invoice.amount_paid = data.amount_attempted 
+
+        notify_admin(db, f"Refund processed for customer '{customer_label}' on invoice '{invoice.invoice_number}'.")
         
         db.commit()
         logger.info(f"REFUND SUCCESS: Invoice {invoice.invoice_number} marked as PAID OUT to customer.")
