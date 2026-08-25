@@ -1109,11 +1109,43 @@
 
             <!-- ── 2. Plans View ── -->
             <section id="plans-view" class="view-section">
-                <div class="section-header">
+                <div class="section-header" style="margin-bottom:1.25rem;">
                     <div>
-                        <h2>Available Plans</h2>
-                        <p>Choose a plan that suits your personal or business goals.</p>
+                        <h2>Available Cloud Plans</h2>
+                        <p>Choose a subscription plan to power your serverless edge compute & automated billing.</p>
                     </div>
+                </div>
+
+                <!-- 🔥 Promotional Discount Banner -->
+                <div class="promo-banner">
+                    <div style="display:flex; align-items:center; gap:0.9rem;">
+                        <span class="hot-badge">🔥 LIMITED TIME DEAL</span>
+                        <div>
+                            <h4 style="font-size:0.95rem; font-weight:800; color:#FFFFFF; margin-bottom:2px;">
+                                Get 25% OFF Annual Billing + $100 Free Cloud Infrastructure Credit!
+                            </h4>
+                            <p style="font-size:0.8rem; color:#A1A1AA; margin:0;">
+                                Instant sub-second proration, 300+ global edge nodes, and zero setup fees.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="countdown-box">
+                        <i data-lucide="clock" style="width:14px;height:14px;color:#E8453C;"></i>
+                        <span>Ends in: <strong id="promoCountdown" style="color:#FFF;">04:12:35</strong></span>
+                    </div>
+                </div>
+
+                <!-- Billing Cycle Switcher (Monthly / Annual) -->
+                <div class="billing-switcher">
+                    <span class="billing-option active" id="btnBillingMonthly" onclick="setBillingCycle(false)">Monthly Billing</span>
+                    <label class="switch" style="position:relative; display:inline-block; width:44px; height:24px;">
+                        <input type="checkbox" id="customerBillingToggle" onchange="setBillingCycle(this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="billing-option" id="btnBillingAnnual" onclick="setBillingCycle(true)" style="display:flex; align-items:center; gap:6px;">
+                        Annual Billing
+                        <span class="discount-pill" style="background:rgba(34,197,94,0.15); color:#166534; font-size:0.7rem; padding:2px 7px; border-radius:999px;">SAVE 25%</span>
+                    </span>
                 </div>
 
                 <div class="pricing-grid" id="customerPlansGrid">
@@ -1670,6 +1702,122 @@
             color: #166534;
             border: 1px solid rgba(22,101,52,0.2);
         }
+
+        /* ── Promotional Banner & Offer Accents ── */
+        .promo-banner {
+            background: linear-gradient(135deg, #111111 0%, #1A1A1E 100%);
+            border: 1px solid rgba(232, 69, 60, 0.4);
+            border-radius: 18px;
+            padding: 1.25rem 1.5rem;
+            color: #FFFFFF;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(232, 69, 60, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .promo-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -10%;
+            width: 300px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(232, 69, 60, 0.22) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(232, 69, 60, 0.5); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(232, 69, 60, 0); }
+        }
+
+        .hot-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #E8453C;
+            color: #FFFFFF;
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            animation: badgePulse 2s infinite;
+        }
+
+        .countdown-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 0.4rem 0.85rem;
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: #FF8A84;
+            font-weight: 700;
+        }
+
+        @keyframes badgeFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        .offer-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 999px;
+            margin-bottom: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            animation: badgeFloat 3s ease-in-out infinite;
+        }
+
+        .offer-tag.red { background: rgba(232,69,60,0.12); color: #E8453C; border: 1px solid rgba(232,69,60,0.25); }
+        .offer-tag.green { background: rgba(34,197,94,0.12); color: #166534; border: 1px solid rgba(34,197,94,0.25); }
+        .offer-tag.amber { background: rgba(245,158,11,0.12); color: #B45309; border: 1px solid rgba(245,158,11,0.25); }
+
+        .billing-switcher {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+            background: #FFFFFF;
+            border: 1px solid #E5E5E3;
+            padding: 0.65rem 1.25rem;
+            border-radius: 16px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .billing-option {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6B7280;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .billing-option.active {
+            color: #111111;
+            font-weight: 800;
+        }
     </style>
 
     <!-- JAVASCRIPT LOGIC (100% PRESERVED) -->
@@ -1737,6 +1885,7 @@
             fetchMyInvoices();
             fetchNotifications(); // FETCH NOTIFICATIONS ALERTS
             renderCloudResources("Free Tier"); // Initialize Cloud Resources view
+            startPromoCountdown(); // Initialize live countdown timer
             setInterval(fetchNotifications, 30000);
 
             // Init Lucide icons
@@ -1856,6 +2005,34 @@
         }
 
         // 1. READ PLANS (GET)
+        window.isAnnualBilling = false;
+
+        function setBillingCycle(isAnnual) {
+            window.isAnnualBilling = isAnnual;
+            const toggle = document.getElementById("customerBillingToggle");
+            const btnMonthly = document.getElementById("btnBillingMonthly");
+            const btnAnnual = document.getElementById("btnBillingAnnual");
+            
+            if (toggle) toggle.checked = isAnnual;
+            if (btnMonthly) btnMonthly.className = isAnnual ? "billing-option" : "billing-option active";
+            if (btnAnnual) btnAnnual.className = isAnnual ? "billing-option active" : "billing-option";
+            
+            fetchCustomerPlans();
+        }
+
+        function startPromoCountdown() {
+            let totalSec = 4 * 3600 + 12 * 60 + 35;
+            setInterval(() => {
+                if (totalSec <= 0) totalSec = 8 * 3600;
+                totalSec--;
+                const h = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+                const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+                const s = String(totalSec % 60).padStart(2, '0');
+                const el = document.getElementById("promoCountdown");
+                if (el) el.innerText = `${h}:${m}:${s}`;
+            }, 1000);
+        }
+
         async function fetchCustomerPlans() {
             const grid = document.getElementById("customerPlansGrid");
             try {
@@ -1879,21 +2056,52 @@
                 plans.forEach(plan => {
                     const features = plan.feature_entitlements ? plan.feature_entitlements.join("<br>✓ ") : "Standard Features";
                     const isCurrent = (window.myCurrentPlanId === plan.id);
+
+                    // Moving offer badges based on plan name/price
+                    let offerTagHtml = `<div class="offer-tag green">🎉 100% FREE FOREVER</div>`;
+                    const pName = (plan.name || "").toLowerCase();
+                    const pPrice = parseFloat(plan.price) || 0;
+
+                    if (pName.includes("starter") || pPrice == 29) {
+                        offerTagHtml = `<div class="offer-tag red">⚡ 7-DAY FREE TRIAL</div>`;
+                    } else if (pName.includes("pro") || pPrice == 79) {
+                        offerTagHtml = `<div class="offer-tag red">🔥 MOST POPULAR · SAVE 25%</div>`;
+                    } else if (pName.includes("business") || pPrice == 199) {
+                        offerTagHtml = `<div class="offer-tag amber">🚀 INCLUDES $100 CREDIT</div>`;
+                    } else if (pName.includes("enterprise") || pPrice == 499) {
+                        offerTagHtml = `<div class="offer-tag red">👑 DEDICATED VPC & SLA</div>`;
+                    }
                     
                     const cardClass = isCurrent ? "pricing-card featured" : "pricing-card";
                     const borderStyle = isCurrent ? "border-color:#E8453C; box-shadow:0 8px 30px rgba(232,69,60,0.18);" : "";
                     const badgeHtml = isCurrent ? `<div style="background:#E8453C; color:#FFF; font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; padding:3px 9px; border-radius:999px; float:right;">CURRENT PLAN</div>` : "";
+                    
                     const btnHtml = isCurrent 
                         ? `<button class="btn btn-outline" disabled style="margin-top:1.25rem; width:100%; border-color:#22C55E; color:#166534; background:#DCFCE7; cursor:default; font-weight:800;">✓ Active Plan</button>`
                         : `<button class="btn" style="margin-top:1.25rem; width:100%;" onclick="subscribePlan('${plan.id}', '${plan.name}')">Select Plan</button>`;
+
+                    // Dynamic price calculation if annual is selected
+                    let displayPrice = `$${plan.price}`;
+                    let subtextPrice = `/mo`;
+                    let savingsHtml = "";
+
+                    if (window.isAnnualBilling && pPrice > 0) {
+                        const discountedPrice = Math.round(pPrice * 0.75);
+                        const yearlySavings = (pPrice - discountedPrice) * 12;
+                        displayPrice = `<span style="text-decoration:line-through; color:#9CA3AF; font-size:1.3rem; margin-right:6px;">$${pPrice}</span>$${discountedPrice}`;
+                        subtextPrice = `/mo (annual)`;
+                        savingsHtml = `<span style="font-size:0.75rem; color:#166534; font-weight:800; display:block; margin-top:3px;">(Save $${yearlySavings}/yr)</span>`;
+                    }
 
                     grid.innerHTML += `
                         <div class="${cardClass}" style="${borderStyle}">
                             <div>
                                 ${badgeHtml}
+                                ${offerTagHtml}
                                 <h4>${plan.name}</h4>
-                                <div class="price">$${plan.price}<span style="font-size:0.9rem;font-weight:500;color:#6B7280;letter-spacing:0;">/mo</span></div>
-                                <div class="features-list">✓ ${features}</div>
+                                <div class="price">${displayPrice}<span style="font-size:0.9rem;font-weight:500;color:#6B7280;letter-spacing:0;">${subtextPrice}</span></div>
+                                ${savingsHtml}
+                                <div class="features-list" style="margin-top:0.9rem;">✓ ${features}</div>
                             </div>
                             ${btnHtml}
                         </div>
