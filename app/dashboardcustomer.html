@@ -787,6 +787,12 @@
                         </a>
                     </li>
                     <li>
+                        <a href="#" data-target="cloud-view">
+                            <span class="nav-icon"><i data-lucide="cloud" style="width:16px;height:16px;"></i></span>
+                            <span>Cloud Resources</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="#" data-target="plans-view">
                             <span class="nav-icon"><i data-lucide="credit-card" style="width:16px;height:16px;"></i></span>
                             <span>Plans</span>
@@ -989,6 +995,118 @@
                 </div>
             </section>
 
+            <!-- ── 1.5. Cloud Resources View (Feature Gated) ── -->
+            <section id="cloud-view" class="view-section">
+                <div class="section-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+                    <div>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <h2 style="margin:0;">☁️ Cloud Infrastructure</h2>
+                            <span id="cloudActiveTierBadge" class="badge active" style="font-size:0.75rem;padding:3px 10px;">Free Tier</span>
+                        </div>
+                        <p style="margin-top:2px;">Manage your compute instances, storage volumes, and cloud network add-ons.</p>
+                    </div>
+                    <button class="btn" onclick="openDeployModal()">
+                        <i data-lucide="plus-circle" style="width:16px;height:16px;"></i>
+                        Deploy New Server
+                    </button>
+                </div>
+
+                <!-- Top Metric Cards Row: Compute, Storage, Bandwidth -->
+                <div class="dashboard-grid" style="margin-bottom:1.75rem;">
+                    <!-- Compute Card -->
+                    <div class="card card-anim">
+                        <div class="metric-icon" style="background:rgba(232,69,60,0.12);color:#E8453C;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:0.8rem;">
+                            <i data-lucide="cpu" style="width:18px;height:18px;"></i>
+                        </div>
+                        <h3 style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.6px;color:#6B7280;">Compute Usage</h3>
+                        <div class="value" style="font-size:1.6rem;letter-spacing:-0.5px;" id="cloudVcpuMetric">
+                            <span id="cloudVcpuUsed">1</span> / <span id="cloudVcpuMax">1 vCPU</span>
+                        </div>
+                        <p style="color:#6B7280;font-size:0.78rem;margin-top:2px;" id="cloudVcpuSubtext">Active Instance Allocation</p>
+                        <div class="sub-progress-track" style="margin-top:0.6rem;">
+                            <div id="cloudVcpuBar" class="sub-progress-fill" style="width: 100%; background: #E8453C;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Storage Card -->
+                    <div class="card card-anim">
+                        <div class="metric-icon" style="background:rgba(34,197,94,0.12);color:#22C55E;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:0.8rem;">
+                            <i data-lucide="hard-drive" style="width:18px;height:18px;"></i>
+                        </div>
+                        <h3 style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.6px;color:#6B7280;">Storage Volume</h3>
+                        <div class="value" style="font-size:1.6rem;letter-spacing:-0.5px;" id="cloudStorageMetric">
+                            <span id="cloudStorageUsed">8</span> / <span id="cloudStorageMax">10 GB</span>
+                        </div>
+                        <p style="color:#6B7280;font-size:0.78rem;margin-top:2px;" id="cloudStorageSubtext">High-speed NVMe Disk</p>
+                        <div class="sub-progress-track" style="margin-top:0.6rem;">
+                            <div id="cloudStorageBar" class="sub-progress-fill" style="width: 80%; background: #22C55E;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Bandwidth Card -->
+                    <div class="card card-anim">
+                        <div class="metric-icon" style="background:rgba(245,158,11,0.12);color:#F59E0B;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:0.8rem;">
+                            <i data-lucide="zap" style="width:18px;height:18px;"></i>
+                        </div>
+                        <h3 style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.6px;color:#6B7280;">Monthly Bandwidth</h3>
+                        <div class="value" style="font-size:1.6rem;letter-spacing:-0.5px;" id="cloudBandwidthMetric">
+                            <span id="cloudBandwidthUsed">42</span> / <span id="cloudBandwidthMax">100 GB</span>
+                        </div>
+                        <p style="color:#6B7280;font-size:0.78rem;margin-top:2px;" id="cloudBandwidthSubtext">Global Network Egress</p>
+                        <div class="sub-progress-track" style="margin-top:0.6rem;">
+                            <div id="cloudBandwidthBar" class="sub-progress-fill" style="width: 42%; background: #F59E0B;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Plan Feature-Gating Upsell Banner -->
+                <div id="cloudUpsellBanner" class="actions-card" style="background: #111111; color: #FFFFFF; border-color: #27272A; margin-bottom: 1.75rem; padding: 1.25rem 1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                        <div style="display:flex; align-items:center; gap:0.9rem;">
+                            <div style="width:38px; height:38px; border-radius:10px; background:rgba(232,69,60,0.2); color:#E8453C; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <i data-lucide="lock" style="width:18px; height:18px;"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size:0.95rem; font-weight:800; color:#FFFFFF; margin-bottom:2px;" id="cloudBannerTitle">Upgrade Plan to Unlock Advanced Cloud Features</h4>
+                                <p style="font-size:0.8rem; color:#A1A1AA; margin:0;" id="cloudBannerDesc">Automated Backups, Load Balancers, and Custom VPC require higher subscription tiers.</p>
+                            </div>
+                        </div>
+                        <button class="btn" onclick="switchView('plans-view')" style="background:#E8453C; color:#FFFFFF;">
+                            <i data-lucide="arrow-up-right" style="width:15px; height:15px;"></i>
+                            View Plan Upgrades
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Deployed Servers Table -->
+                <div class="card" style="padding:1.5rem; overflow:hidden;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                        <div>
+                            <h3 style="font-size:1rem; font-weight:800; color:#111111; margin-bottom:2px;">Active Compute Instances</h3>
+                            <p style="font-size:0.8rem; color:#6B7280; margin:0;">Running virtual servers & containers across global edge nodes.</p>
+                        </div>
+                        <span class="badge neutral" id="serverCountBadge">1 Server Online</span>
+                    </div>
+
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th>Server Name</th>
+                                <th>IP Address</th>
+                                <th>Region</th>
+                                <th>Specs</th>
+                                <th>Status</th>
+                                <th>Uptime</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cloudServersTableBody">
+                            <!-- Dynamic rows injected by renderCloudResources -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
             <!-- ── 2. Plans View ── -->
             <section id="plans-view" class="view-section">
                 <div class="section-header">
@@ -1162,6 +1280,117 @@
                     <i data-lucide="shield-check" style="width:13px;height:13px;"></i>
                     Secured by Mock Gateway 256-bit Encryption
                 </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── DEPLOY SERVER MODAL (WITH FEATURE GATING) ── -->
+    <div class="modal-overlay" id="deployModal">
+        <div class="modal-content" style="max-width: 520px;">
+            <button class="modal-close" onclick="closeDeployModal()">×</button>
+
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.4rem;">
+                <div style="width:36px;height:36px;border-radius:10px;background:rgba(232,69,60,0.12);color:#E8453C;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i data-lucide="server" style="width:18px;height:18px;"></i>
+                </div>
+                <h2 style="font-size:1.25rem;font-weight:900;letter-spacing:-0.4px;color:#111111;">Deploy New Cloud Server</h2>
+            </div>
+            <p style="color:#6B7280;margin-bottom:1.25rem;font-size:0.85rem;padding-left:46px;">
+                Provision a new high-performance instance on BillWise Edge.
+            </p>
+
+            <form id="deployServerForm" onsubmit="handleDeployServer(event)">
+                <!-- Server Name -->
+                <div class="form-group">
+                    <label>Server Instance Name</label>
+                    <input type="text" id="deployServerName" class="form-control" placeholder="e.g. prod-api-cluster-01" required>
+                </div>
+
+                <!-- Region -->
+                <div class="form-group">
+                    <label>Deployment Region</label>
+                    <select id="deployServerRegion" class="form-control" required>
+                        <option value="us-east">US-East (N. Virginia)</option>
+                        <option value="eu-central">EU-Central (Frankfurt)</option>
+                        <option value="ap-south">AP-South (Mumbai)</option>
+                        <option value="ap-southeast">AP-Southeast (Singapore)</option>
+                    </select>
+                </div>
+
+                <!-- Compute Specs -->
+                <div class="form-group">
+                    <label>Instance Specification</label>
+                    <select id="deployServerSpec" class="form-control" required>
+                        <option value="1">1 vCPU · 2GB RAM · 10GB NVMe (Standard)</option>
+                        <option value="2">2 vCPU · 4GB RAM · 25GB NVMe (Performance)</option>
+                        <option value="4">4 vCPU · 8GB RAM · 50GB NVMe (Pro Heavy)</option>
+                        <option value="8">8 vCPU · 16GB RAM · 100GB NVMe (High Throughput)</option>
+                    </select>
+                </div>
+
+                <!-- Premium Add-ons / Upsell (Feature Gated) -->
+                <div style="margin-top: 1.25rem; margin-bottom: 1.25rem; border-top: 1px solid #E5E5E3; padding-top: 1rem;">
+                    <label style="display:block; margin-bottom:0.75rem; color:#111111; font-size:0.78rem; font-weight:800; text-transform:uppercase; letter-spacing:0.6px;">
+                        ⚡ Premium Add-ons (Subscription Gated)
+                    </label>
+
+                    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                        <!-- Addon 1: Automated Backups (Requires Pro) -->
+                        <div id="gateGroupBackups" class="gate-addon-card">
+                            <label style="display:flex; align-items:center; justify-content:space-between; width:100%; cursor:pointer; margin:0;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <input type="checkbox" id="addonBackups" class="gate-checkbox">
+                                    <div>
+                                        <span style="font-weight:700; font-size:0.875rem; color:#111;">Automated Nightly Backups</span>
+                                        <span style="display:block; font-size:0.75rem; color:#6B7280;">Snapshots retained for 30 days</span>
+                                    </div>
+                                </div>
+                                <span id="gateBadgeBackups" class="gate-lock-tag">
+                                    <i data-lucide="lock" style="width:12px;height:12px;"></i> Pro Plan Required
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Addon 2: Load Balancer & HA (Requires Business) -->
+                        <div id="gateGroupLb" class="gate-addon-card">
+                            <label style="display:flex; align-items:center; justify-content:space-between; width:100%; cursor:pointer; margin:0;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <input type="checkbox" id="addonLb" class="gate-checkbox">
+                                    <div>
+                                        <span style="font-weight:700; font-size:0.875rem; color:#111;">Load Balancer & High Availability</span>
+                                        <span style="display:block; font-size:0.75rem; color:#6B7280;">Zero-downtime failover & SSL termination</span>
+                                    </div>
+                                </div>
+                                <span id="gateBadgeLb" class="gate-lock-tag">
+                                    <i data-lucide="lock" style="width:12px;height:12px;"></i> Business Plan Required
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Addon 3: Custom VPC (Requires Enterprise) -->
+                        <div id="gateGroupVpc" class="gate-addon-card">
+                            <label style="display:flex; align-items:center; justify-content:space-between; width:100%; cursor:pointer; margin:0;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <input type="checkbox" id="addonVpc" class="gate-checkbox">
+                                    <div>
+                                        <span style="font-weight:700; font-size:0.875rem; color:#111;">Isolated Custom VPC & Dedicated Gateway</span>
+                                        <span style="display:block; font-size:0.75rem; color:#6B7280;">Private subnet peering & firewall rules</span>
+                                    </div>
+                                </div>
+                                <span id="gateBadgeVpc" class="gate-lock-tag">
+                                    <i data-lucide="lock" style="width:12px;height:12px;"></i> Enterprise Required
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:0.75rem;">
+                    <button type="button" class="btn btn-outline" style="flex:1;" onclick="closeDeployModal()">Cancel</button>
+                    <button type="submit" class="btn" style="flex:2;" id="submitDeployBtn">
+                        <i data-lucide="rocket" style="width:16px;height:16px;"></i> Deploy Instance
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -1384,6 +1613,63 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        /* ── Feature Gating Add-on Cards ── */
+        .gate-addon-card {
+            background: #FAFAF8;
+            border: 1.5px solid #E8E8E6;
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .gate-addon-card:hover:not(.locked) {
+            border-color: #E8453C;
+            background: #FFFFFF;
+        }
+
+        .gate-addon-card.locked {
+            background: #F3F4F6;
+            border-color: #E5E7EB;
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .gate-checkbox {
+            width: 17px;
+            height: 17px;
+            accent-color: #E8453C;
+            cursor: pointer;
+        }
+
+        .gate-addon-card.locked .gate-checkbox {
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .gate-lock-tag {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .gate-lock-tag.locked-tag {
+            background: #FEE2E2;
+            color: #DC2626;
+            border: 1px solid rgba(220,38,38,0.2);
+            cursor: pointer;
+        }
+
+        .gate-lock-tag.unlocked-tag {
+            background: #DCFCE7;
+            color: #166534;
+            border: 1px solid rgba(22,101,52,0.2);
+        }
     </style>
 
     <!-- JAVASCRIPT LOGIC (100% PRESERVED) -->
@@ -1450,6 +1736,7 @@
             fetchMySubscription();
             fetchMyInvoices();
             fetchNotifications(); // FETCH NOTIFICATIONS ALERTS
+            renderCloudResources("Free Tier"); // Initialize Cloud Resources view
             setInterval(fetchNotifications, 30000);
 
             // Init Lucide icons
@@ -1579,16 +1866,36 @@
                     grid.innerHTML = `<div style="color:#6B7280;padding:2rem 0;font-size:0.875rem;">No active plans available at the moment.</div>`;
                     return;
                 }
+
+                // Sort plans by price ascending
+                plans.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+
+                // Cache all plans
+                window.allPlansCache = window.allPlansCache || {};
+                plans.forEach(plan => {
+                    window.allPlansCache[plan.id] = plan;
+                });
+
                 plans.forEach(plan => {
                     const features = plan.feature_entitlements ? plan.feature_entitlements.join("<br>✓ ") : "Standard Features";
+                    const isCurrent = (window.myCurrentPlanId === plan.id);
+                    
+                    const cardClass = isCurrent ? "pricing-card featured" : "pricing-card";
+                    const borderStyle = isCurrent ? "border-color:#E8453C; box-shadow:0 8px 30px rgba(232,69,60,0.18);" : "";
+                    const badgeHtml = isCurrent ? `<div style="background:#E8453C; color:#FFF; font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; padding:3px 9px; border-radius:999px; float:right;">CURRENT PLAN</div>` : "";
+                    const btnHtml = isCurrent 
+                        ? `<button class="btn btn-outline" disabled style="margin-top:1.25rem; width:100%; border-color:#22C55E; color:#166534; background:#DCFCE7; cursor:default; font-weight:800;">✓ Active Plan</button>`
+                        : `<button class="btn" style="margin-top:1.25rem; width:100%;" onclick="subscribePlan('${plan.id}', '${plan.name}')">Select Plan</button>`;
+
                     grid.innerHTML += `
-                        <div class="pricing-card">
+                        <div class="${cardClass}" style="${borderStyle}">
                             <div>
+                                ${badgeHtml}
                                 <h4>${plan.name}</h4>
                                 <div class="price">$${plan.price}<span style="font-size:0.9rem;font-weight:500;color:#6B7280;letter-spacing:0;">/mo</span></div>
                                 <div class="features-list">✓ ${features}</div>
                             </div>
-                            <button class="btn btn-outline" style="margin-top:1.25rem;width:100%;" onclick="subscribePlan('${plan.id}', '${plan.name}')">Select Plan</button>
+                            ${btnHtml}
                         </div>
                     `;
                 });
@@ -1607,25 +1914,53 @@
                 const subInfoContent = document.getElementById("subInfoContent");
 
                 if (subs.length === 0) {
-                    dashPlanName.innerText = "Free Tier";
-                    dashPlanSubtext.innerText = "Upgrade anytime";
-                    headerBadge.innerText = "FREE TIER";
-                    headerBadge.className = "badge neutral";
-                    subInfoContent.innerHTML = `<p style="color:#6B7280;font-size:0.875rem;">You are not currently subscribed to a premium plan. Visit the Plans tab to upgrade.</p>`;
+                    window.myCurrentPlanId = null;
+                    window.myCurrentPlanName = "Free Tier";
+                    window.myCurrentPlanPrice = 0;
+
+                    if (dashPlanName) dashPlanName.innerText = "Free Tier";
+                    if (dashPlanSubtext) dashPlanSubtext.innerText = "Upgrade anytime to unlock compute";
+                    if (headerBadge) {
+                        headerBadge.innerText = "FREE TIER";
+                        headerBadge.className = "badge neutral";
+                    }
+                    subInfoContent.innerHTML = `<p style="color:#6B7280;font-size:0.875rem;">You are not currently subscribed to a paid plan. Visit the Plans tab to upgrade your cloud infrastructure.</p>`;
+                    renderCloudResources("Free Tier", 0);
                     return;
                 }
 
                 const sub = subs[0]; 
                 myCurrentSubscriptionId = sub.id;
                 myCurrentSubscriptionStatus = sub.status;
+                window.myCurrentPlanId = sub.plan_id;
 
-                dashPlanName.innerText = `PLAN-${sub.plan_id.split('-')[0].toUpperCase()}`;
-                dashPlanSubtext.innerText = `Renews on ${new Date(sub.current_period_end).toLocaleDateString()}`;
+                // Lookup plan details from cache or fetch if missing
+                window.allPlansCache = window.allPlansCache || {};
+                let planObj = window.allPlansCache[sub.plan_id];
+                if (!planObj) {
+                    try {
+                        const planRes = await fetch(`${API_BASE_URL}/plans/`);
+                        const allPlans = await planRes.json();
+                        allPlans.forEach(p => window.allPlansCache[p.id] = p);
+                        planObj = window.allPlansCache[sub.plan_id];
+                    } catch(e) {}
+                }
 
-                headerBadge.innerText = sub.status.toUpperCase();
-                if (sub.status === "active" || sub.status === "trial") headerBadge.className = "badge active";
-                else if (sub.status === "cancelled") headerBadge.className = "badge danger";
-                else headerBadge.className = "badge warning";
+                const actualPlanName = planObj ? planObj.name : (sub.plan_name || "Pro Tier");
+                const actualPlanPrice = planObj ? planObj.price : 49.00;
+
+                window.myCurrentPlanName = actualPlanName;
+                window.myCurrentPlanPrice = actualPlanPrice;
+
+                if (dashPlanName) dashPlanName.innerText = actualPlanName;
+                if (dashPlanSubtext) dashPlanSubtext.innerText = `$${actualPlanPrice}/mo · Renews ${new Date(sub.current_period_end).toLocaleDateString()}`;
+
+                if (headerBadge) {
+                    headerBadge.innerText = sub.status.toUpperCase();
+                    if (sub.status === "active" || sub.status === "trial") headerBadge.className = "badge active";
+                    else if (sub.status === "cancelled") headerBadge.className = "badge danger";
+                    else headerBadge.className = "badge warning";
+                }
 
                 let actionButtons = "";
                 if (sub.status === "active" || sub.status === "trial") {
@@ -1643,6 +1978,10 @@
                 subInfoContent.innerHTML = `
                     <div style="display:grid;gap:0.75rem;margin-bottom:1.5rem;">
                         <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:#F9F9F8;border-radius:12px;">
+                            <span style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#6B7280;">Active Plan</span>
+                            <span style="font-weight:800;color:#111111;">${actualPlanName} ($${actualPlanPrice}/mo)</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:#F9F9F8;border-radius:12px;">
                             <span style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#6B7280;">Status</span>
                             <span style="font-weight:700;color:#16A34A;">${sub.status.toUpperCase()}</span>
                         </div>
@@ -1650,13 +1989,14 @@
                             <span style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#6B7280;">Renewal Date</span>
                             <span style="font-weight:600;color:#111111;">${new Date(sub.current_period_end).toLocaleDateString()}</span>
                         </div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem 1rem;background:#F9F9F8;border-radius:12px;">
-                            <span style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#6B7280;">Plan ID</span>
-                            <span style="font-weight:600;color:#111111;font-size:0.8rem;">${sub.plan_id}</span>
-                        </div>
                     </div>
                     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">${actionButtons}</div>
                 `;
+
+                // Update Cloud Resources View & Plans tab active state!
+                renderCloudResources(actualPlanName, actualPlanPrice);
+                fetchCustomerPlans();
+
             } catch (e) { console.error("Error fetching subscription:", e); }
         }
 
@@ -1716,7 +2056,7 @@
 
         // 4. SUBSCRIPTION ACTIONS (POST/PUT)
         async function subscribePlan(planId, planName) {
-            if(!confirm(`Are you sure you want to select the ${planName} plan?`)) return;
+            if(!confirm(`Are you sure you want to select the "${planName}" plan?`)) return;
             try {
                 let res;
                 if (myCurrentSubscriptionId && myCurrentSubscriptionStatus !== 'cancelled') {
@@ -1725,8 +2065,18 @@
                     res = await authFetch("/subscriptions/", { method: "POST", body: JSON.stringify({ plan_id: planId }) });
                 }
                 if (res.ok) {
-                    alert(`Successfully processed your request for ${planName}!`);
-                    fetchMySubscription(); fetchMyInvoices(); switchView('billing-view'); 
+                    window.myCurrentPlanId = planId;
+                    const planObj = (window.allPlansCache && window.allPlansCache[planId]) ? window.allPlansCache[planId] : null;
+                    const price = planObj ? planObj.price : 0;
+                    
+                    // Instantly sync Cloud Resources console to the newly selected plan!
+                    renderCloudResources(planName, price);
+
+                    alert(`🎉 Plan changed to "${planName}"!\n\nYour Cloud Infrastructure limits and features have been updated.`);
+                    
+                    fetchMySubscription(); 
+                    fetchMyInvoices(); 
+                    switchView('cloud-view'); 
                 } else {
                     const err = await res.json(); alert("Error processing subscription: " + JSON.stringify(err));
                 }
@@ -1945,6 +2295,297 @@
                 section.querySelectorAll('.will-reveal:not(.revealed)').forEach(el => revealObserver.observe(el));
             }, 30);
         };
+
+        // ══════════════════════════════════════
+        // CLOUD RESOURCES & FEATURE GATING SYSTEM
+        // ══════════════════════════════════════
+        const PLAN_TIERS = {
+            "Free": {
+                name: "Free Tier",
+                vcpuMax: 1,
+                storageMax: 10,
+                bandwidthMax: 100,
+                features: { backups: false, loadBalancer: false, customVpc: false },
+                requiredTierFor: { backups: "Pro", loadBalancer: "Business", customVpc: "Enterprise" }
+            },
+            "Starter": {
+                name: "Starter Tier",
+                vcpuMax: 2,
+                storageMax: 50,
+                bandwidthMax: 500,
+                features: { backups: false, loadBalancer: false, customVpc: false },
+                requiredTierFor: { backups: "Pro", loadBalancer: "Business", customVpc: "Enterprise" }
+            },
+            "Pro": {
+                name: "Pro Tier",
+                vcpuMax: 4,
+                storageMax: 100,
+                bandwidthMax: 2000,
+                features: { backups: true, loadBalancer: false, customVpc: false },
+                requiredTierFor: { backups: "Pro", loadBalancer: "Business", customVpc: "Enterprise" }
+            },
+            "Business": {
+                name: "Business Tier",
+                vcpuMax: 10,
+                storageMax: 500,
+                bandwidthMax: 10000,
+                features: { backups: true, loadBalancer: true, customVpc: false },
+                requiredTierFor: { backups: "Pro", loadBalancer: "Business", customVpc: "Enterprise" }
+            },
+            "Enterprise": {
+                name: "Enterprise Tier",
+                vcpuMax: Infinity,
+                storageMax: Infinity,
+                bandwidthMax: Infinity,
+                features: { backups: true, loadBalancer: true, customVpc: true },
+                requiredTierFor: { backups: "Pro", loadBalancer: "Business", customVpc: "Enterprise" }
+            }
+        };
+
+        // State tracker for active deployed cloud servers
+        let cloudState = {
+            activeTier: "Free",
+            servers: [
+                { id: "srv-1", name: "prod-edge-node-01", ip: "192.241.140.22", region: "US-East (N. Virginia)", vcpu: 1, storage: 8, status: "Running", uptime: "14d 8h 22m" }
+            ]
+        };
+
+        function getNormalizedTierName(rawName, price) {
+            if (!rawName) return "Free";
+            const lower = rawName.toString().toLowerCase();
+            
+            if (lower.includes("enterprise")) return "Enterprise";
+            if (lower.includes("business")) return "Business";
+            if (lower.includes("pro")) return "Pro";
+            if (lower.includes("starter")) return "Starter";
+            if (lower.includes("free")) return "Free";
+
+            // Price-based fallback tier mapping for custom DB names (e.g. "tire 2", "tt", "good", etc.)
+            const numPrice = parseFloat(price);
+            if (!isNaN(numPrice)) {
+                if (numPrice <= 0) return "Free";
+                if (numPrice < 50) return "Starter";
+                if (numPrice < 150) return "Pro";
+                if (numPrice < 400) return "Business";
+                return "Enterprise";
+            }
+
+            return "Free";
+        }
+
+        function renderCloudResources(activePlanName, activePlanPrice) {
+            const tierName = getNormalizedTierName(activePlanName, activePlanPrice);
+            cloudState.activeTier = tierName;
+            const tierConfig = PLAN_TIERS[tierName] || PLAN_TIERS["Free"];
+
+            // Update Badge & Header
+            const tierBadge = document.getElementById("cloudActiveTierBadge");
+            if (tierBadge) {
+                tierBadge.innerText = tierConfig.name;
+                tierBadge.className = tierName === "Free" ? "badge neutral" : "badge active";
+            }
+
+            // Calculate current usage
+            let usedVcpu = cloudState.servers.reduce((sum, s) => sum + (s.vcpu || 1), 0);
+            let usedStorage = cloudState.servers.reduce((sum, s) => sum + (s.storage || 8), 0);
+            let usedBandwidth = 42; // GB simulated usage
+
+            // Format Display Limits
+            const vcpuMaxText = tierConfig.vcpuMax === Infinity ? "Unlimited" : `${tierConfig.vcpuMax} vCPU${tierConfig.vcpuMax > 1 ? 's' : ''}`;
+            const storageMaxText = tierConfig.storageMax === Infinity ? "Unlimited" : `${tierConfig.storageMax} GB`;
+            const bwMaxText = tierConfig.bandwidthMax === Infinity ? "Unlimited" : (tierConfig.bandwidthMax >= 1000 ? `${tierConfig.bandwidthMax/1000} TB` : `${tierConfig.bandwidthMax} GB`);
+
+            const usedVcpuEl = document.getElementById("cloudVcpuUsed");
+            const maxVcpuEl = document.getElementById("cloudVcpuMax");
+            const usedStorageEl = document.getElementById("cloudStorageUsed");
+            const maxStorageEl = document.getElementById("cloudStorageMax");
+            const usedBwEl = document.getElementById("cloudBandwidthUsed");
+            const maxBwEl = document.getElementById("cloudBandwidthMax");
+
+            if (usedVcpuEl) usedVcpuEl.innerText = usedVcpu;
+            if (maxVcpuEl) maxVcpuEl.innerText = vcpuMaxText;
+            if (usedStorageEl) usedStorageEl.innerText = usedStorage;
+            if (maxStorageEl) maxStorageEl.innerText = storageMaxText;
+            if (usedBwEl) usedBwEl.innerText = usedBandwidth;
+            if (maxBwEl) maxBwEl.innerText = bwMaxText;
+
+            // Calculate progress bar widths
+            const vcpuPercent = tierConfig.vcpuMax === Infinity ? 25 : Math.min(100, Math.round((usedVcpu / tierConfig.vcpuMax) * 100));
+            const storagePercent = tierConfig.storageMax === Infinity ? 20 : Math.min(100, Math.round((usedStorage / tierConfig.storageMax) * 100));
+            const bwPercent = tierConfig.bandwidthMax === Infinity ? 15 : Math.min(100, Math.round((usedBandwidth / tierConfig.bandwidthMax) * 100));
+
+            const vcpuBar = document.getElementById("cloudVcpuBar");
+            const storageBar = document.getElementById("cloudStorageBar");
+            const bwBar = document.getElementById("cloudBandwidthBar");
+
+            if (vcpuBar) vcpuBar.style.width = vcpuPercent + "%";
+            if (storageBar) storageBar.style.width = storagePercent + "%";
+            if (bwBar) bwBar.style.width = bwPercent + "%";
+
+            // Update Upsell Banner Description
+            const bannerTitle = document.getElementById("cloudBannerTitle");
+            const bannerDesc = document.getElementById("cloudBannerDesc");
+            const bannerWrap = document.getElementById("cloudUpsellBanner");
+
+            if (tierName === "Enterprise") {
+                if (bannerWrap) bannerWrap.style.display = "none";
+            } else {
+                if (bannerWrap) bannerWrap.style.display = "block";
+                if (bannerTitle) bannerTitle.innerText = `Current Plan: ${tierConfig.name} (${vcpuMaxText} Max)`;
+                if (bannerDesc) {
+                    if (tierName === "Free" || tierName === "Starter") {
+                        bannerDesc.innerText = "Upgrade to Pro or Business to unlock Automated Backups, Load Balancing, and High Availability.";
+                    } else if (tierName === "Pro") {
+                        bannerDesc.innerText = "Automated Backups unlocked! Upgrade to Business to unlock Load Balancers & HA.";
+                    } else if (tierName === "Business") {
+                        bannerDesc.innerText = "Load Balancer & HA unlocked! Upgrade to Enterprise for Custom VPC & Unlimited Resources.";
+                    }
+                }
+            }
+
+            // Render Deployed Servers Table
+            const tbody = document.getElementById("cloudServersTableBody");
+            const countBadge = document.getElementById("serverCountBadge");
+            if (countBadge) countBadge.innerText = `${cloudState.servers.length} Instance${cloudState.servers.length !== 1 ? 's' : ''} Online`;
+
+            if (tbody) {
+                tbody.innerHTML = "";
+                if (cloudState.servers.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#6B7280;padding:2rem;">No active servers deployed. Click "Deploy New Server" above to provision your first cloud node.</td></tr>`;
+                } else {
+                    cloudState.servers.forEach(s => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td style="font-weight:700; color:#111; font-family:monospace; font-size:0.875rem;">
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <i data-lucide="server" style="width:15px;height:15px;color:#E8453C;"></i>
+                                        ${s.name}
+                                    </div>
+                                </td>
+                                <td style="font-family:monospace; color:#52525B;">${s.ip}</td>
+                                <td style="color:#6B7280;">${s.region}</td>
+                                <td style="font-weight:600; color:#111;">${s.vcpu} vCPU / ${s.storage}GB SSD</td>
+                                <td><span class="status-dot green"></span> <span style="font-weight:700; color:#16A34A;">${s.status}</span></td>
+                                <td style="color:#6B7280; font-size:0.82rem;">${s.uptime}</td>
+                                <td>
+                                    <button class="btn btn-outline" style="padding:0.3rem 0.6rem; font-size:0.75rem; color:#EF4444;" onclick="terminateServer('${s.id}')">
+                                        Terminate
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
+
+            // Apply Feature Gating to Deploy Modal Addons
+            applyFeatureGating(tierConfig);
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function applyFeatureGating(tierConfig) {
+            const features = tierConfig.features;
+
+            // 1. Backups Addon (Requires Pro)
+            setupAddonGate("gateGroupBackups", "addonBackups", "gateBadgeBackups", features.backups, "Pro Plan");
+
+            // 2. Load Balancer Addon (Requires Business)
+            setupAddonGate("gateGroupLb", "addonLb", "gateBadgeLb", features.loadBalancer, "Business Plan");
+
+            // 3. Custom VPC Addon (Requires Enterprise)
+            setupAddonGate("gateGroupVpc", "addonVpc", "gateBadgeVpc", features.customVpc, "Enterprise Plan");
+        }
+
+        function setupAddonGate(groupId, checkboxId, badgeId, isUnlocked, requiredPlanName) {
+            const groupEl = document.getElementById(groupId);
+            const checkboxEl = document.getElementById(checkboxId);
+            const badgeEl = document.getElementById(badgeId);
+
+            if (!groupEl || !checkboxEl || !badgeEl) return;
+
+            if (isUnlocked) {
+                groupEl.classList.remove("locked");
+                checkboxEl.disabled = false;
+                badgeEl.className = "gate-lock-tag unlocked-tag";
+                badgeEl.innerHTML = `<i data-lucide="check" style="width:12px;height:12px;"></i> Unlocked on ${cloudState.activeTier}`;
+                badgeEl.onclick = null;
+            } else {
+                groupEl.classList.add("locked");
+                checkboxEl.disabled = true;
+                checkboxEl.checked = false;
+                badgeEl.className = "gate-lock-tag locked-tag";
+                badgeEl.innerHTML = `🔒 ${requiredPlanName} Required`;
+                badgeEl.onclick = (e) => {
+                    e.preventDefault();
+                    closeDeployModal();
+                    alert(`🔒 Feature Locked!\n\nThis feature requires the ${requiredPlanName} or higher. Redirecting you to the Plans page to view upgrade options.`);
+                    switchView('plans-view');
+                };
+            }
+        }
+
+        function openDeployModal() {
+            // Re-run gating before opening modal
+            const currentTierConfig = PLAN_TIERS[cloudState.activeTier] || PLAN_TIERS["Free"];
+            applyFeatureGating(currentTierConfig);
+            document.getElementById("deployModal").classList.add("active");
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function closeDeployModal() {
+            document.getElementById("deployModal").classList.remove("active");
+            document.getElementById("deployServerForm").reset();
+        }
+
+        function handleDeployServer(e) {
+            e.preventDefault();
+            const name = document.getElementById("deployServerName").value;
+            const regionVal = document.getElementById("deployServerRegion").value;
+            const specVcpu = parseInt(document.getElementById("deployServerSpec").value, 10);
+
+            const tierConfig = PLAN_TIERS[cloudState.activeTier] || PLAN_TIERS["Free"];
+
+            // Check quota
+            let currentVcpuTotal = cloudState.servers.reduce((sum, s) => sum + s.vcpu, 0);
+            if (tierConfig.vcpuMax !== Infinity && (currentVcpuTotal + specVcpu) > tierConfig.vcpuMax) {
+                alert(`⚠️ vCPU Quota Exceeded!\n\nYour current ${tierConfig.name} allows a maximum of ${tierConfig.vcpuMax} vCPU(s). You are currently using ${currentVcpuTotal} vCPU(s).\n\nPlease upgrade your plan to deploy additional compute resources.`);
+                closeDeployModal();
+                switchView('plans-view');
+                return;
+            }
+
+            // Region formatted
+            const regionNames = {
+                "us-east": "US-East (N. Virginia)",
+                "eu-central": "EU-Central (Frankfurt)",
+                "ap-south": "AP-South (Mumbai)",
+                "ap-southeast": "AP-Southeast (Singapore)"
+            };
+
+            const randomIp = `192.168.${Math.floor(Math.random()*200)+10}.${Math.floor(Math.random()*200)+10}`;
+            const newServer = {
+                id: "srv-" + Date.now(),
+                name: name || "edge-node-new",
+                ip: randomIp,
+                region: regionNames[regionVal] || regionVal,
+                vcpu: specVcpu,
+                storage: specVcpu * 10,
+                status: "Running",
+                uptime: "0m"
+            };
+
+            cloudState.servers.push(newServer);
+            closeDeployModal();
+            renderCloudResources(cloudState.activeTier);
+            alert(`🚀 Server Instance "${newServer.name}" deployed successfully on ${newServer.region}!`);
+        }
+
+        function terminateServer(serverId) {
+            if (!confirm("Are you sure you want to terminate this instance? Disk storage will be freed.")) return;
+            cloudState.servers = cloudState.servers.filter(s => s.id !== serverId);
+            renderCloudResources(cloudState.activeTier);
+        }
     </script>
 </body>
 </html>

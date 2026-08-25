@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BillWise — Enterprise Cloud Hosting & Automated Billing Engine</title>
+    <meta name="description" content="BillWise is a decoupled, automated billing engine and cloud services provider. Spin up serverless edge compute with real-time micro-metering and sub-second proration.">
+    <meta name="theme-color" content="#E8453C">
+
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <style>
+        /* ── Design System Tokens ── */
+        :root {
+            --accent:         #E8453C;
+            --accent-hover:   #D03530;
+            --accent-active:  #B52824;
+            --accent-soft:    rgba(232, 69, 60, 0.08);
+            --accent-glow:    rgba(232, 69, 60, 0.25);
+
+            --bg:             #EFEFED;
+            --surface:        #FFFFFF;
+            --surface-elevated:#FAFAFA;
+            --dark-surface:   #111111;
+            --dark-card:      #18181B;
+            --dark-border:    #27272A;
+
+            --text-primary:   #111111;
+            --text-secondary: #52525B;
+            --text-muted:     #71717A;
+            --text-light:     #F4F4F5;
+            --text-dim-dark:  #A1A1AA;
+
+            --border:         #E5E5E3;
+            --border-strong:  #D4D4D0;
+
+            --radius-sm:      6px;
+            --radius-md:      12px;
+            --radius-lg:      18px;
+            --radius-xl:      24px;
+            --radius-pill:    9999px;
+
+            --shadow-subtle:  0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-card:    0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+            --shadow-hover:   0 20px 40px -10px rgba(0, 0, 0, 0.1), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+            --shadow-glow:    0 0 35px rgba(232, 69, 60, 0.22);
+
+            --font-sans:      'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono:      'JetBrains Mono', monospace;
+
+            --transition-fast: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* ── Base Styles & Resets ── */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* ── Scroll Reveal Animations ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .delay-1 { transition-delay: 0.1s; }
+        .delay-2 { transition-delay: 0.2s; }
+        .delay-3 { transition-delay: 0.3s; }
+        .delay-4 { transition-delay: 0.4s; }
+
+        /* ── Header & Navbar ── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(239, 239, 237, 0.82);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(229, 229, 227, 0.8);
+            transition: background var(--transition-fast), border-color var(--transition-fast);
+        }
+
+        .navbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 76px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .logo-box {
+            width: 38px;
+            height: 38px;
+            background: var(--accent);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(232, 69, 60, 0.3);
+            transition: transform var(--transition-fast);
+        }
+
+        .logo:hover .logo-box {
+            transform: scale(1.05) rotate(-3deg);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            font-size: 0.938rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: color var(--transition-fast);
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width var(--transition-fast);
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.35rem;
+            border-radius: var(--radius-md);
+            font-size: 0.938rem;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: #FFFFFF;
+            box-shadow: 0 4px 14px rgba(232, 69, 60, 0.32);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(232, 69, 60, 0.45);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-strong);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--surface);
+            border-color: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .btn-dark {
+            background-color: var(--dark-surface);
+            color: #FFFFFF;
+        }
+
+        .btn-dark:hover {
+            background-color: #27272A;
+            transform: translateY(-2px);
+        }
+
+        .btn-lg {
+            padding: 0.9rem 1.75rem;
+            font-size: 1rem;
+            border-radius: var(--radius-md);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            padding: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        /* ── Hero Section ── */
+        .hero {
+            padding-top: 150px;
+            padding-bottom: 90px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg-glow {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 700px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(232, 69, 60, 0.12) 0%, rgba(239, 239, 237, 0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            background: rgba(232, 69, 60, 0.08);
+            border: 1px solid rgba(232, 69, 60, 0.2);
+            border-radius: var(--radius-pill);
+            font-size: 0.813rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 1.75rem;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent);
+        }
+
+        .hero-title {
+            font-size: clamp(2.4rem, 5vw, 4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+            margin-bottom: 1.25rem;
+        }
+
+        .hero-title span {
+            color: var(--accent);
+            background: linear-gradient(135deg, #E8453C 0%, #FF6B62 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.05rem, 2vw, 1.25rem);
+            color: var(--text-secondary);
+            max-width: 680px;
+            margin: 0 auto 2.25rem;
+            font-weight: 400;
+        }
+
+        .hero-cta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* ── Hero UI Preview Card ── */
+        .hero-preview {
+            position: relative;
+            z-index: 1;
+            max-width: 1040px;
+            margin: 0 auto;
+            background: var(--dark-surface);
+            border-radius: var(--radius-xl);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.35), var(--shadow-glow);
+            overflow: hidden;
+        }
+
+        .preview-header {
+            background: #18181B;
+            padding: 0.85rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .window-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #FF5F56; }
+        .dot-yellow { background: #FFBD2E; }
+        .dot-green { background: #27C93F; }
+
+        .preview-title {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--text-dim-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .preview-body {
+            padding: 1.75rem;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 1.5rem;
+            color: #FFFFFF;
+        }
+
+        /* Dash Widget Left */
+        .widget-card {
+            background: #18181B;
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .widget-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-dim-dark);
+            font-weight: 600;
+        }
+
+        .live-tag {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+            color: #22C55E;
+            font-family: var(--font-mono);
+        }
+
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background: #22C55E;
+            border-radius: 50%;
+            animation: pulse 1.8s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        .metric-big {
+            font-family: var(--font-mono);
+            font-size: 2rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-sub {
+            font-size: 0.8rem;
+            color: var(--text-dim-dark);
+        }
+
+        .mini-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 50px;
+            margin-top: 1rem;
+        }
+
+        .bar {
+            flex: 1;
+            background: rgba(232, 69, 60, 0.25);
+            border-radius: 3px;
+            transition: height 0.4s ease;
+        }
+
+        .bar.active {
+            background: var(--accent);
+            box-shadow: 0 0 10px rgba(232, 69, 60, 0.5);
+        }
+
+        /* Floating Badges on Preview */
+        .float-badge {
+            position: absolute;
+            background: rgba(24, 24, 27, 0.92);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 0.6rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.813rem;
+            font-weight: 600;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .float-badge-1 {
+            top: 40px;
+            right: -20px;
+            animation-delay: 0s;
+        }
+
+        .float-badge-2 {
+            bottom: 30px;
+            left: -20px;
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* ── Partners / Stats Strip ── */
+        .stats-strip {
+            padding: 2.5rem 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-family: var(--font-mono);
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.03em;
+        }
+
+        .stat-item p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 0.25rem;
+        }
+
+        /* ── Features Grid Section ── */
+        .section {
+            padding: 100px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 680px;
+            margin: 0 auto 4rem;
+        }
+
+        .section-tag {
+            font-size: 0.813rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 3.5vw, 2.75rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .section-desc {
+            font-size: 1.063rem;
+            color: var(--text-secondary);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.75rem;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2.25rem;
+            box-shadow: var(--shadow-card);
+            transition: all var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--border-strong);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .icon-wrapper {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-md);
+            background: var(--accent-soft);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            transition: transform var(--transition-fast);
+        }
+
+        .feature-card:hover .icon-wrapper {
+            transform: scale(1.08);
+        }
+
+        .feature-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-desc {
+            font-size: 0.938rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+        }
+
+        /* ── How It Works Section ── */
+        .how-it-works {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .how-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3.5rem;
+            align-items: center;
+        }
+
+        .code-window {
+            background: var(--dark-surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .code-header {
+            background: #18181B;
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .code-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .code-tab {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            color: var(--text-dim-dark);
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .code-tab.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #FFFFFF;
+        }
+
+        .copy-btn {
+            color: var(--text-dim-dark);
+            padding: 0.3rem;
+            border-radius: var(--radius-sm);
+            transition: color var(--transition-fast);
+        }
+
+        .copy-btn:hover {
+            color: #FFFFFF;
+        }
+
+        .code-content {
+            padding: 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            line-height: 1.7;
+            color: #E4E4E7;
+            overflow-x: auto;
+        }
+
+        .code-line {
+            display: flex;
+        }
+
+        .line-num {
+            color: #52525B;
+            width: 2.2rem;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .token-keyword { color: #F43F5E; }
+        .token-function { color: #60A5FA; }
+        .token-string { color: #34D399; }
+        .token-comment { color: #71717A; font-style: italic; }
+        .token-number { color: #F59E0B; }
+
+        .steps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 1.25rem;
+        }
+
+        .step-number {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--accent-soft);
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid rgba(232, 69, 60, 0.2);
+        }
+
+        .step-content h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+        }
+
+        .step-content p {
+            font-size: 0.938rem;
+            color: var(--text-secondary);
+        }
+
+        /* ── Pricing Section ── */
+        .pricing-toggle-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .pricing-toggle-text {
+            font-size: 0.938rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: var(--border-strong);
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .discount-pill {
+            background: rgba(34, 197, 94, 0.12);
+            color: #166534;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: var(--radius-pill);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            align-items: stretch;
+        }
+
+        .price-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 2.5rem 2rem;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all var(--transition-smooth);
+            position: relative;
+        }
+
+        .price-card.featured {
+            border: 2px solid var(--accent);
+            box-shadow: 0 20px 40px -10px rgba(232, 69, 60, 0.18), var(--shadow-hover);
+            transform: scale(1.03);
+            background: #FFFFFF;
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: #FFFFFF;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.3rem 0.9rem;
+            border-radius: var(--radius-pill);
+            box-shadow: 0 4px 10px rgba(232, 69, 60, 0.4);
+        }
+
+        .plan-name {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-desc {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            min-height: 42px;
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-price {
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: baseline;
+            gap: 0.3rem;
+        }
+
+        .price-amount {
+            font-family: var(--font-mono);
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.03em;
+        }
+
+        .price-period {
+            font-size: 0.938rem;
+            color: var(--text-muted);
+        }
+
+        .plan-features {
+            margin-bottom: 2.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.938rem;
+            color: var(--text-secondary);
+        }
+
+        .feature-icon {
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        /* ── FAQ Section ── */
+        .faq-grid {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .faq-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            transition: border-color var(--transition-fast);
+        }
+
+        .faq-item.active {
+            border-color: var(--border-strong);
+        }
+
+        .faq-question {
+            width: 100%;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1.063rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-align: left;
+        }
+
+        .faq-icon {
+            transition: transform 0.3s ease;
+            color: var(--text-muted);
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+            color: var(--accent);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, padding 0.35s ease;
+            padding: 0 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.938rem;
+            line-height: 1.65;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 200px;
+            padding-bottom: 1.25rem;
+        }
+
+        /* ── CTA Banner Section ── */
+        .cta-banner {
+            background: linear-gradient(135deg, #111111 0%, #1A1A1E 100%);
+            border-radius: var(--radius-xl);
+            padding: 4.5rem 3rem;
+            color: #FFFFFF;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .cta-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(232, 69, 60, 0.25) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cta-title {
+            font-size: clamp(2rem, 3.5vw, 2.75rem);
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-desc {
+            font-size: 1.1rem;
+            color: var(--text-dim-dark);
+            max-width: 600px;
+            margin: 0 auto 2.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-btn-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding-top: 80px;
+            padding-bottom: 40px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+
+        .footer-brand p {
+            color: var(--text-secondary);
+            font-size: 0.938rem;
+            margin-top: 1rem;
+            max-width: 320px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #166534;
+            background: rgba(34, 197, 94, 0.1);
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--radius-pill);
+            margin-top: 1.25rem;
+        }
+
+        .footer-col h4 {
+            font-size: 0.938rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.25rem;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .footer-link {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            transition: color var(--transition-fast);
+        }
+
+        .footer-link:hover {
+            color: var(--accent);
+        }
+
+        .footer-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 2.5rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-icon {
+            color: var(--text-muted);
+            transition: color var(--transition-fast);
+        }
+
+        .social-icon:hover {
+            color: var(--text-primary);
+        }
+
+        /* ── Toast Notification ── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--dark-surface);
+            color: #FFFFFF;
+            padding: 0.85rem 1.35rem;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* ── Responsive Design Media Queries ── */
+        @media (max-width: 1024px) {
+            .hero-preview .preview-body {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .how-container {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                max-width: 480px;
+                margin: 0 auto;
+            }
+
+            .price-card.featured {
+                transform: none;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .float-badge {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links, .nav-actions {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .mobile-menu {
+                position: fixed;
+                top: 76px;
+                left: 0;
+                right: 0;
+                background: var(--surface);
+                border-bottom: 1px solid var(--border);
+                padding: 1.5rem;
+                display: flex;
+                flex-direction: column;
+                gap: 1.25rem;
+                box-shadow: var(--shadow-hover);
+                transform: translateY(-100%);
+                opacity: 0;
+                pointer-events: none;
+                transition: all 0.3s ease;
+            }
+
+            .mobile-menu.active {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i data-lucide="check-circle-2" style="color: #22C55E; width: 18px; height: 18px;"></i>
+        <span id="toast-message">Code copied to clipboard!</span>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="container navbar-inner">
+            <a href="#" class="logo">
+                <div class="logo-box">BW</div>
+                <span>BillWise</span>
+            </a>
+
+            <nav class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#how-it-works" class="nav-link">How it Works</a>
+                <a href="#pricing" class="nav-link">Pricing</a>
+                <a href="#faq" class="nav-link">FAQ</a>
+            </nav>
+
+            <div class="nav-actions">
+                <a href="auth.html" class="btn btn-outline">Sign In</a>
+                <a href="auth.html" class="btn btn-primary">Get Started</a>
+            </div>
+
+            <button class="mobile-menu-btn" id="mobile-toggle" aria-label="Toggle Navigation Menu">
+                <i data-lucide="menu" style="width: 24px; height: 24px;"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div class="mobile-menu" id="mobile-menu">
+            <a href="#features" class="nav-link mobile-link">Features</a>
+            <a href="#how-it-works" class="nav-link mobile-link">How it Works</a>
+            <a href="#pricing" class="nav-link mobile-link">Pricing</a>
+            <a href="#faq" class="nav-link mobile-link">FAQ</a>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+            <a href="auth.html" class="btn btn-outline" style="width: 100%;">Sign In</a>
+            <a href="auth.html" class="btn btn-primary" style="width: 100%;">Get Started</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-bg-glow"></div>
+            <div class="container">
+                <div class="hero-content">
+                    <div class="badge reveal">
+                        <span class="badge-dot"></span>
+                        ⚡ BillWise v2.0 Decoupled Billing & Compute Engine
+                    </div>
+                    <h1 class="hero-title reveal delay-1">
+                        Enterprise Cloud Hosting & <span>Automated Billing</span> in One
+                    </h1>
+                    <p class="hero-subtitle reveal delay-2">
+                        Spin up serverless edge compute with real-time usage micro-metering, instant automated proration, and zero-latency webhook delivery.
+                    </p>
+                    <div class="hero-cta reveal delay-3">
+                        <a href="auth.html" class="btn btn-primary btn-lg">
+                            Get Started Free
+                            <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+                        </a>
+                        <a href="#how-it-works" class="btn btn-outline btn-lg">
+                            <i data-lucide="terminal" style="width: 18px; height: 18px;"></i>
+                            View Documentation
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Hero Interactive UI Widget Mockup -->
+                <div class="hero-preview reveal delay-4">
+                    <div class="preview-header">
+                        <div class="window-dots">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                        <div class="preview-title">
+                            <i data-lucide="shield" style="width: 14px; height: 14px; color: var(--accent);"></i>
+                            billwise.cloud/console/live-meter
+                        </div>
+                        <div style="font-size: 0.75rem; color: #71717A; font-family: var(--font-mono);">
+                            Region: us-east-1 (Edge)
+                        </div>
+                    </div>
+
+                    <div class="preview-body">
+                        <!-- Left Panel: Telemetry Widget -->
+                        <div class="widget-card">
+                            <div class="widget-header">
+                                <span class="widget-label">Real-Time Metering</span>
+                                <span class="live-tag"><span class="pulse-dot"></span> Streaming</span>
+                            </div>
+                            <div class="metric-big" id="req-counter">1,482,900</div>
+                            <div class="metric-sub">Active Events Processed / sec</div>
+                            <div class="mini-bars">
+                                <div class="bar" style="height: 40%;"></div>
+                                <div class="bar" style="height: 65%;"></div>
+                                <div class="bar" style="height: 50%;"></div>
+                                <div class="bar" style="height: 85%;"></div>
+                                <div class="bar active" style="height: 100%;"></div>
+                                <div class="bar" style="height: 70%;"></div>
+                                <div class="bar" style="height: 90%;"></div>
+                                <div class="bar active" style="height: 95%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Proration Calculation Mockup -->
+                        <div class="widget-card">
+                            <div class="widget-header">
+                                <span class="widget-label">Automated Proration Pipeline</span>
+                                <span style="font-size: 0.75rem; color: var(--accent); font-family: var(--font-mono); font-weight: 600;">Status: Synced</span>
+                            </div>
+                            <div style="font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.8;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom: 0.4rem;">
+                                    <span style="color:#A1A1AA;">Base Subscription:</span>
+                                    <span>$49.00 / mo</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom: 0.4rem;">
+                                    <span style="color:#A1A1AA;">Tier Upgrade (Mid-cycle):</span>
+                                    <span style="color:#22C55E;">+$14.20 (Prorated)</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-bottom: 0.4rem; border-top: 1px dashed #27272A; padding-top:0.4rem;">
+                                    <span style="color:#A1A1AA;">Current Unbilled Balance:</span>
+                                    <span style="font-weight:700; color:#FFFFFF;" id="balance-counter">$63.20</span>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1rem; background: rgba(232,69,60,0.1); border: 1px solid rgba(232,69,60,0.2); padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.75rem; color: #FF8A84; display:flex; align-items:center; gap:0.5rem;">
+                                <i data-lucide="zap" style="width: 14px; height: 14px;"></i>
+                                Auto-invoicing triggers in 4 days via Webhook HMAC.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floating SaaS Badges -->
+                    <div class="float-badge float-badge-1">
+                        <i data-lucide="clock" style="color: #22C55E; width: 16px; height: 16px;"></i>
+                        Sub-second Proration Engine
+                    </div>
+                    <div class="float-badge float-badge-2">
+                        <i data-lucide="globe" style="color: var(--accent); width: 16px; height: 16px;"></i>
+                        300+ Edge Compute Locations
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Strip -->
+            <div class="stats-strip reveal">
+                <div class="container">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <h3>99.999%</h3>
+                            <p>Global Edge Uptime</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>&lt; 5ms</h3>
+                            <p>API Latency (P99)</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>$2.4B+</h3>
+                            <p>Automated Billing Processed</p>
+                        </div>
+                        <div class="stat-item">
+                            <h3>10M+</h3>
+                            <p>Daily Webhook Events</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Grid Section -->
+        <section id="features" class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-tag">Decoupled Architecture</span>
+                    <h2 class="section-title">Built for Modern SaaS & High-Velocity Engineers</h2>
+                    <p class="section-desc">
+                        Say goodbye to bloated monolithic billing systems. BillWise decouples your cloud metering from billing logic for maximum throughput and accuracy.
+                    </p>
+                </div>
+
+                <div class="features-grid">
+                    <!-- Feature 1 -->
+                    <div class="feature-card reveal delay-1">
+                        <div class="icon-wrapper">
+                            <i data-lucide="globe" style="width: 26px; height: 26px;"></i>
+                        </div>
+                        <h3 class="feature-title">Global Edge Compute</h3>
+                        <p class="feature-desc">
+                            Deploy lightweight serverless functions directly on our 300+ edge locations with ultra-low latency and zero cold starts.
+                        </p>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="feature-card reveal delay-2">
+                        <div class="icon-wrapper">
+                            <i data-lucide="receipt" style="width: 26px; height: 26px;"></i>
+                        </div>
+                        <h3 class="feature-title">Automated Proration & Billing</h3>
+                        <p class="feature-desc">
+                            Real-time meter-to-invoice engine handling mid-cycle upgrades, tier changes, and usage spikes with millisecond accuracy.
+                        </p>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="feature-card reveal delay-3">
+                        <div class="icon-wrapper">
+                            <i data-lucide="shield-check" style="width: 26px; height: 26px;"></i>
+                        </div>
+                        <h3 class="feature-title">Secure Webhook Integrations</h3>
+                        <p class="feature-desc">
+                            Signature-verified HMAC event delivery, automated exponential backoff retries, and dead-letter queue monitoring.
+                        </p>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="feature-card reveal delay-1">
+                        <div class="icon-wrapper">
+                            <i data-lucide="activity" style="width: 26px; height: 26px;"></i>
+                        </div>
+                        <h3 class="feature-title">Real-Time Telemetry</h3>
+                        <p class="feature-desc">
+                            Stream millions of usage metrics per second with granular visualization, live threshold alerts, and custom export APIs.
+                        </p>
+                    </div>
+
+                    <!-- Feature 5 -->
+                    <div class="feature-card reveal delay-2">
+                        <div class="icon-wrapper">
+                            <i data-lucide="coins" style="width: 26px; height: 26px;"></i>
+                        </div>
+                        <h3 class="feature-title">Multi-Currency Engine</h3>
+                        <p class="feature-desc">
+                            Accept 135+ currencies with automated spot exchange rate calculations, regional tax compliance, and automated PDF invoicing.
+                        </p>
+                    </div>
+
+                    <!-- Feature 6 -->
+                    <div class="feature-card reveal delay-3">
+                        <div class="icon-wrapper">
+                            <i data-lucide="code-2" style="width: 26px; height: 26px;"></i>
+                        </div>
+                        <h3 class="feature-title">Developer-First SDKs</h3>
+                        <p class="feature-desc">
+                            Fully typed SDKs for Node.js, Python, Go, and Rust. Simple 3-line initialization with built-in queueing and fallback.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="section how-it-works">
+            <div class="container">
+                <div class="how-container">
+                    <!-- Left Column: Interactive Code Terminal -->
+                    <div class="code-window reveal">
+                        <div class="code-header">
+                            <div class="code-tabs">
+                                <button class="code-tab active" data-lang="node">Node.js</button>
+                                <button class="code-tab" data-lang="python">Python</button>
+                                <button class="code-tab" data-lang="curl">cURL</button>
+                            </div>
+                            <button class="copy-btn" id="copy-code-btn" title="Copy Code">
+                                <i data-lucide="copy" style="width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                        <div class="code-content">
+                            <pre id="code-block"><code><div class="code-line"><span class="line-num">1</span><span class="token-keyword">import</span> { BillWise } <span class="token-keyword">from</span> <span class="token-string">'@billwise/sdk'</span>;</div><div class="code-line"><span class="line-num">2</span></div><div class="code-line"><span class="line-num">3</span><span class="token-comment">// Initialize edge billing client</span></div><div class="code-line"><span class="line-num">4</span><span class="token-keyword">const</span> billwise = <span class="token-keyword">new</span> <span class="token-function">BillWise</span>({ apiKey: process.env.BILLWISE_KEY });</div><div class="code-line"><span class="line-num">5</span></div><div class="code-line"><span class="line-num">6</span><span class="token-comment">// Track usage event with instant proration</span></div><div class="code-line"><span class="line-num">7</span><span class="token-keyword">await</span> billwise.meters.<span class="token-function">ingest</span>({</div><div class="code-line"><span class="line-num">8</span>  customerId: <span class="token-string">'cust_99x82'</span>,</div><div class="code-line"><span class="line-num">9</span>  meterName: <span class="token-string">'compute_seconds'</span>,</div><div class="code-line"><span class="line-num">10</span>  quantity: <span class="token-number">1420</span>,</div><div class="code-line"><span class="line-num">11</span>  timestamp: Date.<span class="token-function">now</span>()</div><div class="code-line"><span class="line-num">12</span>});</div></code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Step-by-Step Narrative -->
+                    <div class="reveal delay-1">
+                        <span class="section-tag">Developer Experience</span>
+                        <h2 class="section-title">Integrate Micro-Metering in 5 Minutes</h2>
+                        <p class="section-desc" style="margin-bottom: 2rem;">
+                            Spinning up serverless infrastructure shouldn't require complex custom accounting logic. BillWise bridges the gap automatically.
+                        </p>
+
+                        <div class="steps-list">
+                            <div class="step-item">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h3>Provision Edge Nodes & Meters</h3>
+                                    <p>Define usage meters for CPU runtime, API calls, or database storage in the BillWise console or via Terraform.</p>
+                                </div>
+                            </div>
+
+                            <div class="step-item">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h3>Stream Telemetry via SDK</h3>
+                                    <p>Send lightweight telemetry payloads from your app servers or edge functions with automatic batching and retry logic.</p>
+                                </div>
+                            </div>
+
+                            <div class="step-item">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h3>Automated Proration & Invoicing</h3>
+                                    <p>BillWise computes exact mid-cycle proration, generates compliant invoices, and collects payment via Stripe/PayPal webhooks.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section id="pricing" class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-tag">Flexible Plans</span>
+                    <h2 class="section-title">Predictable Pricing for Fast-Growing Teams</h2>
+                    <p class="section-desc">
+                        No hidden surprises. Scale seamlessly from your first prototype to billions of monthly API calls.
+                    </p>
+                </div>
+
+                <!-- Monthly/Annual Billing Switch -->
+                <div class="pricing-toggle-wrapper reveal">
+                    <span class="pricing-toggle-text">Monthly Billing</span>
+                    <label class="switch">
+                        <input type="checkbox" id="pricing-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="pricing-toggle-text">Annual Billing</span>
+                    <span class="discount-pill">Save 20%</span>
+                </div>
+
+                <!-- 3-Card Pricing Table -->
+                <div class="pricing-grid">
+                    <!-- Free / Developer Card -->
+                    <div class="price-card reveal delay-1">
+                        <div>
+                            <h3 class="plan-name">Developer</h3>
+                            <p class="plan-desc">Ideal for side projects, testing, and initial edge deployment.</p>
+                            <div class="plan-price">
+                                <span class="price-amount">$0</span>
+                                <span class="price-period">/ month</span>
+                            </div>
+                            <div class="plan-features">
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    Up to 10,000 requests/mo
+                                </div>
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    1 Global Edge Location
+                                </div>
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    Basic Metering Engine
+                                </div>
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    Community Support
+                                </div>
+                            </div>
+                        </div>
+                        <a href="auth.html" class="btn btn-outline" style="width: 100%;">Start Free</a>
+                    </div>
+
+                    <!-- Pro Plan Card (FEATURED) -->
+                    <div class="price-card featured reveal delay-2">
+                        <div class="popular-badge">Most Popular</div>
+                        <div>
+                            <h3 class="plan-name">Pro Scale</h3>
+                            <p class="plan-desc">For production applications needing automated proration & edge fleets.</p>
+                            <div class="plan-price">
+                                <span class="price-amount" id="pro-price">$49</span>
+                                <span class="price-period" id="pro-period">/ month</span>
+                            </div>
+                            <div class="plan-features">
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    <strong>10,000,000 events/mo</strong> included
+                                </div>
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    300+ Edge Compute Locations
+                                </div>
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    Automated Sub-second Proration
+                                </div>
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    Signed Webhooks & Dead-Letter Queue
+                                </div>
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    24/7 Priority SLA Support
+                                </div>
+                            </div>
+                        </div>
+                        <a href="auth.html" class="btn btn-primary" style="width: 100%;">Get Started Pro</a>
+                    </div>
+
+                    <!-- Enterprise Card -->
+                    <div class="price-card reveal delay-3">
+                        <div>
+                            <h3 class="plan-name">Enterprise</h3>
+                            <p class="plan-desc">Custom cloud compute & dedicated billing engine instances.</p>
+                            <div class="plan-price">
+                                <span class="price-amount">Custom</span>
+                            </div>
+                            <div class="plan-features">
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    Unlimited Monthly Telemetry
+                                </div>
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    Isolated Dedicated Edge Clusters
+                                </div>
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    Custom Compliance & SOC2 Type II
+                                </div>
+                                <div class="feature-item">
+                                    <i data-lucide="check" class="feature-icon" style="width: 18px; height: 18px;"></i>
+                                    Dedicated Solutions Architect
+                                </div>
+                            </div>
+                        </div>
+                        <a href="auth.html" class="btn btn-dark" style="width: 100%;">Contact Sales</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="section" style="background: var(--surface); border-top: 1px solid var(--border);">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-tag">Got Questions?</span>
+                    <h2 class="section-title">Frequently Asked Questions</h2>
+                    <p class="section-desc">Everything you need to know about BillWise edge compute and automated billing engine.</p>
+                </div>
+
+                <div class="faq-grid">
+                    <div class="faq-item reveal">
+                        <button class="faq-question">
+                            <span>How does automated proration work during plan upgrades?</span>
+                            <i data-lucide="chevron-down" class="faq-icon" style="width: 20px; height: 20px;"></i>
+                        </button>
+                        <div class="faq-answer">
+                            BillWise tracks customer billing cycles down to the millisecond. When a user upgrades or downgrades mid-cycle, our engine automatically calculates unused time on the previous tier and credits/charges the exact prorated differential on the next invoice automatically.
+                        </div>
+                    </div>
+
+                    <div class="faq-item reveal delay-1">
+                        <button class="faq-question">
+                            <span>Can I use BillWise with existing gateways like Stripe or PayPal?</span>
+                            <i data-lucide="chevron-down" class="faq-icon" style="width: 20px; height: 20px;"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Yes! BillWise acts as a decoupled metering and billing orchestration layer. It seamlessly syncs customer meters and prorated invoices into Stripe, Razorpay, or custom banking APIs via authenticated webhooks.
+                        </div>
+                    </div>
+
+                    <div class="faq-item reveal delay-2">
+                        <button class="faq-question">
+                            <span>What happens if a webhook delivery fails?</span>
+                            <i data-lucide="chevron-down" class="faq-icon" style="width: 20px; height: 20px;"></i>
+                        </button>
+                        <div class="faq-answer">
+                            All webhooks are signed with an HMAC key for verification. If your server is temporarily down, BillWise automatically retries event delivery using exponential backoff up to 72 hours and retains failed messages in a Dead-Letter Queue.
+                        </div>
+                    </div>
+
+                    <div class="faq-item reveal delay-3">
+                        <button class="faq-question">
+                            <span>Is there a latency overhead when logging meters at the edge?</span>
+                            <i data-lucide="chevron-down" class="faq-icon" style="width: 20px; height: 20px;"></i>
+                        </button>
+                        <div class="faq-answer">
+                            No. Our SDKs use non-blocking asynchronous batching in memory. Usage metrics are flushed asynchronously to the nearest edge location in under 5ms without blocking your application response time.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Banner Section -->
+        <section class="section">
+            <div class="container">
+                <div class="cta-banner reveal">
+                    <h2 class="cta-title">Start Automating Your Cloud Billing Today</h2>
+                    <p class="cta-desc">Join thousands of developers using BillWise to launch serverless edge compute with zero-headache metering.</p>
+                    <div class="cta-btn-wrapper">
+                        <a href="auth.html" class="btn btn-primary btn-lg">
+                            Get Started Free
+                            <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="#" class="logo">
+                        <div class="logo-box">BW</div>
+                        <span>BillWise</span>
+                    </a>
+                    <p>Enterprise cloud hosting and decoupled billing engine designed for high-velocity software companies.</p>
+                    <div class="status-pill">
+                        <span class="pulse-dot"></span> All Systems Operational
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <div class="footer-links">
+                        <a href="#features" class="footer-link">Edge Compute</a>
+                        <a href="#features" class="footer-link">Automated Proration</a>
+                        <a href="#how-it-works" class="footer-link">Webhook Queue</a>
+                        <a href="#pricing" class="footer-link">Pricing Plans</a>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Developers</h4>
+                    <div class="footer-links">
+                        <a href="#how-it-works" class="footer-link">Documentation</a>
+                        <a href="#how-it-works" class="footer-link">Node.js SDK</a>
+                        <a href="#how-it-works" class="footer-link">API Reference</a>
+                        <a href="#" class="footer-link">GitHub Repository</a>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <div class="footer-links">
+                        <a href="#" class="footer-link">About Us</a>
+                        <a href="#" class="footer-link">Careers</a>
+                        <a href="#" class="footer-link">Privacy Policy</a>
+                        <a href="#" class="footer-link">Terms of Service</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 BillWise Cloud Engine Inc. All rights reserved.</p>
+                <div class="social-links">
+                    <a href="#" class="social-icon" aria-label="Twitter"><i data-lucide="twitter" style="width: 20px; height: 20px;"></i></a>
+                    <a href="#" class="social-icon" aria-label="GitHub"><i data-lucide="github" style="width: 20px; height: 20px;"></i></a>
+                    <a href="#" class="social-icon" aria-label="LinkedIn"><i data-lucide="linkedin" style="width: 20px; height: 20px;"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Embedded JavaScript Interactivity -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Initialize Lucide Icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+
+            // 2. IntersectionObserver for Scroll Animations (.reveal)
+            const revealElements = document.querySelectorAll('.reveal');
+            const observerOptions = {
+                root: null,
+                threshold: 0.12,
+                rootMargin: '0px 0px -40px 0px'
+            };
+
+            const revealObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            revealElements.forEach(el => revealObserver.observe(el));
+
+            // 3. Mobile Navigation Menu Toggle
+            const mobileToggle = document.getElementById('mobile-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            if (mobileToggle && mobileMenu) {
+                mobileToggle.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('active');
+                });
+
+                document.querySelectorAll('.mobile-link').forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileMenu.classList.remove('active');
+                    });
+                });
+            }
+
+            // 4. Interactive Code Snippet Tabs
+            const codeTabs = document.querySelectorAll('.code-tab');
+            const codeBlock = document.getElementById('code-block');
+
+            const codeSnippets = {
+                node: `<div class="code-line"><span class="line-num">1</span><span class="token-keyword">import</span> { BillWise } <span class="token-keyword">from</span> <span class="token-string">'@billwise/sdk'</span>;</div><div class="code-line"><span class="line-num">2</span></div><div class="code-line"><span class="line-num">3</span><span class="token-comment">// Initialize edge billing client</span></div><div class="code-line"><span class="line-num">4</span><span class="token-keyword">const</span> billwise = <span class="token-keyword">new</span> <span class="token-function">BillWise</span>({ apiKey: process.env.BILLWISE_KEY });</div><div class="code-line"><span class="line-num">5</span></div><div class="code-line"><span class="line-num">6</span><span class="token-comment">// Track usage event with instant proration</span></div><div class="code-line"><span class="line-num">7</span><span class="token-keyword">await</span> billwise.meters.<span class="token-function">ingest</span>({</div><div class="code-line"><span class="line-num">8</span>  customerId: <span class="token-string">'cust_99x82'</span>,</div><div class="code-line"><span class="line-num">9</span>  meterName: <span class="token-string">'compute_seconds'</span>,</div><div class="code-line"><span class="line-num">10</span>  quantity: <span class="token-number">1420</span>,</div><div class="code-line"><span class="line-num">11</span>  timestamp: Date.<span class="token-function">now</span>()</div><div class="code-line"><span class="line-num">12</span>});</div>`,
+                python: `<div class="code-line"><span class="line-num">1</span><span class="token-keyword">from</span> billwise <span class="token-keyword">import</span> BillWiseClient</div><div class="code-line"><span class="line-num">2</span></div><div class="code-line"><span class="line-num">3</span><span class="token-comment"># Initialize Python SDK</span></div><div class="code-line"><span class="line-num">4</span>client = BillWiseClient(api_key=<span class="token-string">"bw_live_99a8b7"</span>)</div><div class="code-line"><span class="line-num">5</span></div><div class="code-line"><span class="line-num">6</span><span class="token-comment"># Ingest meter event</span></div><div class="code-line"><span class="line-num">7</span>response = client.meters.<span class="token-function">track</span>(</div><div class="code-line"><span class="line-num">8</span>    customer_id=<span class="token-string">"cust_99x82"</span>,</div><div class="code-line"><span class="line-num">9</span>    meter=<span class="token-string">"edge_execution"</span>,</div><div class="code-line"><span class="line-num">10</span>    value=<span class="token-number">1420</span></div><div class="code-line"><span class="line-num">11</span>)</div>`,
+                curl: `<div class="code-line"><span class="line-num">1</span>curl -X POST https://api.billwise.cloud/v1/meters/ingest \\</div><div class="code-line"><span class="line-num">2</span>  -H <span class="token-string">"Authorization: Bearer bw_live_99a8b7"</span> \\</div><div class="code-line"><span class="line-num">3</span>  -H <span class="token-string">"Content-Type: application/json"</span> \\</div><div class="code-line"><span class="line-num">4</span>  -d <span class="token-string">'{</span></div><div class="code-line"><span class="line-num">5</span><span class="token-string">    "customer_id": "cust_99x82",</span></div><div class="code-line"><span class="line-num">6</span><span class="token-string">    "meter": "compute_seconds",</span></div><div class="code-line"><span class="line-num">7</span><span class="token-string">    "quantity": 1420</span></div><div class="code-line"><span class="line-num">8</span><span class="token-string">  }'</span></div>`
+            };
+
+            codeTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    codeTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const lang = tab.getAttribute('data-lang');
+                    if (codeSnippets[lang]) {
+                        codeBlock.innerHTML = codeSnippets[lang];
+                    }
+                });
+            });
+
+            // 5. Copy Code Snippet Button
+            const copyBtn = document.getElementById('copy-code-btn');
+            const toast = document.getElementById('toast');
+
+            if (copyBtn) {
+                copyBtn.addEventListener('click', () => {
+                    const textToCopy = codeBlock.innerText;
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        toast.classList.add('show');
+                        setTimeout(() => toast.classList.remove('show'), 3000);
+                    }).catch(err => {
+                        console.error('Copy failed', err);
+                    });
+                });
+            }
+
+            // 6. Pricing Monthly / Annual Toggle
+            const pricingToggle = document.getElementById('pricing-toggle');
+            const proPrice = document.getElementById('pro-price');
+            const proPeriod = document.getElementById('pro-period');
+
+            if (pricingToggle) {
+                pricingToggle.addEventListener('change', () => {
+                    if (pricingToggle.checked) {
+                        proPrice.textContent = '$39';
+                        proPeriod.textContent = '/ month (billed annually)';
+                    } else {
+                        proPrice.textContent = '$49';
+                        proPeriod.textContent = '/ month';
+                    }
+                });
+            }
+
+            // 7. Interactive Accordion FAQ
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            faqQuestions.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const faqItem = btn.parentElement;
+                    const isActive = faqItem.classList.contains('active');
+
+                    // Close all FAQs
+                    document.querySelectorAll('.faq-item').forEach(item => item.classList.remove('active'));
+
+                    // Toggle current FAQ
+                    if (!isActive) {
+                        faqItem.classList.add('active');
+                    }
+                });
+            });
+
+            // 8. Live Meter Ticker Simulation in Hero Preview
+            const reqCounter = document.getElementById('req-counter');
+            let currentReq = 1482900;
+            if (reqCounter) {
+                setInterval(() => {
+                    currentReq += Math.floor(Math.random() * 18) + 5;
+                    reqCounter.textContent = currentReq.toLocaleString();
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
