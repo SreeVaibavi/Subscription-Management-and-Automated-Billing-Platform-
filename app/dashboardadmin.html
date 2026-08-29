@@ -27,10 +27,10 @@
     ══════════════════════════════════════════ */
     :root {
         /* Legacy vars (kept for JS-injected styles) */
-        --primary-mint:   #E8453C;
-        --primary-hover:  #D03530;
-        --mint-light:     rgba(232,69,60,0.1);
-        --text-dark-mint: #C03530;
+        --primary-mint:   #8b5cf6;
+        --primary-hover:  #7c3aed;
+        --mint-light:     rgba(139,92,246,0.12);
+        --text-dark-mint: #7c3aed;
         --bg-page:        #EBEBEA;
         --card-bg:        #FFFFFF;
         --text-main:      #111111;
@@ -41,11 +41,11 @@
         --danger:         #EF4444;
         --warning:        #F59E0B;
         --shadow-card:    0 2px 8px rgba(0,0,0,0.06);
-        --shadow-btn:     0 4px 14px rgba(232,69,60,0.28);
+        --shadow-btn:     0 4px 14px rgba(139,92,246,0.28);
 
         /* New design tokens */
-        --accent:         #E8453C;
-        --accent2:        #D03530;
+        --accent:         #8b5cf6;
+        --accent2:        #7c3aed;
         --dark-1:         #1A1A1A;
         --dark-2:         #242424;
         --dark-3:         #2E2E2E;
@@ -96,7 +96,7 @@
 
     .logo-mark {
         width: 32px; height: 32px;
-        background: var(--accent);
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
         border-radius: 8px;
         display: flex; align-items: center; justify-content: center;
         font-weight: 900; font-size: 12px; color: #fff; flex-shrink: 0;
@@ -113,7 +113,7 @@
     .logo-subtitle {
         font-size: 8.5px; font-weight: 700; letter-spacing: 1.6px;
         text-transform: uppercase; color: var(--accent);
-        background: rgba(232,69,60,0.18);
+        background: rgba(139,92,246,0.18);
         padding: 1px 6px; border-radius: 999px;
         margin-top: 3px; display: inline-block; width: fit-content;
     }
@@ -151,9 +151,9 @@
     .nav-links li a:hover .nav-icon { opacity: 1; }
 
     .nav-links li.active a {
-        color: #fff; background: var(--accent);
+        color: #fff; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
         font-weight: 600;
-        box-shadow: 0 3px 10px rgba(232,69,60,0.35);
+        box-shadow: 0 8px 18px rgba(124,58,237,0.32);
     }
     .nav-links li.active a .nav-icon { opacity: 1; }
 
